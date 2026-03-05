@@ -70,13 +70,39 @@ const I18N = (function() {
             return translations[lang];
         }
         
-        // 根据当前页面路径确定翻译文件路径
-        const pathPrefix = window.location.pathname.includes('/tools/') ? '../../' : '';
+        // 通过当前脚本的路径确定翻译文件路径
+        // 这种方法在 GitHub Pages 子路径部署和本地开发都能正常工作
+        let localePath;
+        
+        // 获取 i18n.js 脚本的 src
+        const scripts = document.getElementsByTagName('script');
+        let i18nScriptSrc = '';
+        for (let script of scripts) {
+            if (script.src && script.src.includes('i18n.js')) {
+                i18nScriptSrc = script.src;
+                break;
+            }
+        }
+        
+        if (i18nScriptSrc) {
+            // 从 i18n.js 的路径推导出 locales 的路径
+            // i18n.js 在 /js/i18n.js，locales 在 /js/locales/
+            const i18nDir = i18nScriptSrc.substring(0, i18nScriptSrc.lastIndexOf('/') + 1);
+            localePath = `${i18nDir}locales/${lang}.json`;
+        } else {
+            // 后备方案：根据路径检测
+            const pathname = window.location.pathname;
+            if (pathname.includes('/tools/')) {
+                localePath = `../../js/locales/${lang}.json`;
+            } else {
+                localePath = `./js/locales/${lang}.json`;
+            }
+        }
         
         try {
-            const response = await fetch(`${pathPrefix}js/locales/${lang}.json`);
+            const response = await fetch(localePath);
             if (!response.ok) {
-                throw new Error(`Failed to load ${lang}.json`);
+                throw new Error(`Failed to load ${lang}.json from ${localePath}`);
             }
             translations[lang] = await response.json();
             return translations[lang];
