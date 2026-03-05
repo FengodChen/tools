@@ -307,6 +307,29 @@
                     </div>
                 </div>
 
+                <!-- Hosts File Content -->
+                <div class="mb-8">
+                    <h3 class="text-lg font-semibold mb-4 flex items-center gap-2">
+                        <svg class="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                        </svg>
+                        <span data-i18n="githubhosts.hostsContent">Hosts 文件内容</span>
+                        <span class="text-sm font-normal text-slate-400" data-i18n="githubhosts.hostsContentSubtitle">(可直接复制粘贴到 hosts 文件)</span>
+                    </h3>
+                    <div class="bg-slate-900 rounded-xl overflow-hidden">
+                        <div class="flex items-center justify-between px-4 py-2 bg-slate-800 border-b border-slate-700">
+                            <span class="text-slate-400 text-sm" data-i18n="githubhosts.hostsContentTitle">直接复制使用</span>
+                            <button onclick="copyHostsContent()" class="copy-btn px-3 py-1 rounded text-sm flex items-center gap-1">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                                </svg>
+                                <span class="copy-text" data-i18n="githubhosts.copy">复制</span>
+                            </button>
+                        </div>
+                        <pre id="hostsContent" class="code-block p-4 m-0"># 请点击"获取最新 IP"按钮生成 hosts 内容</pre>
+                    </div>
+                </div>
+
                 <!-- Platform Commands -->
                 <div>
                     <h3 class="text-lg font-semibold mb-4 flex items-center gap-2">
@@ -688,6 +711,20 @@
             windowsLines.push('pause');
             
             document.getElementById('windowsCommand').textContent = windowsLines.join('\n');
+
+            // Hosts file content
+            const hostsLines = [
+                '# GitHub Hosts Start',
+                '# Generated at ' + new Date().toLocaleString()
+            ];
+            
+            validEntries.forEach(([domain, ip]) => {
+                hostsLines.push(`${ip} ${domain}`);
+            });
+            
+            hostsLines.push('# GitHub Hosts End');
+            
+            document.getElementById('hostsContent').textContent = hostsLines.join('\n');
         }
 
         // Switch platform tab
@@ -739,6 +776,43 @@
                 document.body.removeChild(textarea);
                 
                 showToast(I18N.t('githubhosts.toast.copied') || '命令已复制到剪贴板', 'success');
+            }
+        }
+
+        // Copy hosts content to clipboard
+        async function copyHostsContent() {
+            const content = document.getElementById('hostsContent').textContent;
+            
+            if (!content || content.includes('请点击"获取最新 IP"')) {
+                showToast(I18N.t('githubhosts.toast.noContent') || '没有可复制的内容', 'error');
+                return;
+            }
+
+            try {
+                await navigator.clipboard.writeText(content);
+                
+                // Show copied state
+                const btn = document.querySelector('#hostsContent').closest('.bg-slate-900').querySelector('.copy-btn');
+                const originalText = btn.querySelector('.copy-text').textContent;
+                btn.classList.add('copied');
+                btn.querySelector('.copy-text').textContent = I18N.t('githubhosts.copied') || '已复制';
+                
+                setTimeout(() => {
+                    btn.classList.remove('copied');
+                    btn.querySelector('.copy-text').textContent = originalText;
+                }, 2000);
+
+                showToast(I18N.t('githubhosts.toast.hostsCopied') || 'Hosts 内容已复制到剪贴板', 'success');
+            } catch (e) {
+                // Fallback
+                const textarea = document.createElement('textarea');
+                textarea.value = content;
+                document.body.appendChild(textarea);
+                textarea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textarea);
+                
+                showToast(I18N.t('githubhosts.toast.hostsCopied') || 'Hosts 内容已复制到剪贴板', 'success');
             }
         }
 
