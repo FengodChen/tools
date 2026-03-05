@@ -1,6 +1,19 @@
 {
   "tools": [
     {
+      "id": "remove-background",
+      "name": "背景去除工具",
+      "description": "智能图片背景去除工具，支持白色/纯色背景去除，本地处理保护隐私",
+      "icon": "🖼️",
+      "path": "tools/remove-background/index.html",
+      "tags": [
+        "图片",
+        "设计",
+        "工具"
+      ],
+      "date": "2026-03-05"
+    },
+    {
       "id": "timestamp-converter",
       "name": "时间戳转换器",
       "description": "Unix 时间戳与日期时间相互转换",
@@ -49,15 +62,6 @@
         "格式化",
         "工具"
       ],
-      "date": "2026-03-05"
-    },
-    {
-      "id": "remove-background",
-      "name": "背景去除工具",
-      "description": "智能图片背景去除工具，支持白色/纯色背景去除，本地处理保护隐私",
-      "icon": "🖼️",
-      "path": "tools/remove-background/index.html",
-      "tags": ["图片", "设计", "工具"],
       "date": "2026-03-05"
     }
   ]
