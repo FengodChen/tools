@@ -30,7 +30,9 @@
     "Base64": "Base64",
     "JSON": "JSON",
     "格式化": "Formatter",
-    "图片": "Image"
+    "图片": "Image",
+    "网络": "Network",
+    "GitHub": "GitHub"
   },
   "language": {
     "name": "English",
@@ -56,6 +58,10 @@
     "remove-background": {
       "name": "Background Remover",
       "description": "Smart image background removal tool, supports white/solid color removal, local processing for privacy"
+    },
+    "github-hosts": {
+      "name": "GitHub Hosts",
+      "description": "Automatically get GitHub latest IP addresses, one-click generate hosts modification commands for Linux/macOS/Windows"
     }
   },
   "base64": {
@@ -318,6 +324,36 @@
       "uploadFirst": "Please upload or paste an image first",
       "pickColorHint": "🎨 Click original image to pick color, press ESC to cancel",
       "colorPicked": "✅ Color picked: {{color}}"
+    }
+  },
+  "githubhosts": {
+    "title": "🐙 GitHub Hosts",
+    "subtitle": "Automatically get GitHub latest IP addresses, one-click generate hosts modification commands",
+    "fetchBtn": "Fetch Latest IPs",
+    "loading": "Fetching...",
+    "ipResults": "Resolution Results",
+    "commands": "One-Click Commands",
+    "copy": "Copy",
+    "copied": "Copied",
+    "linuxCmdTitle": "Linux Command (requires sudo)",
+    "macosCmdTitle": "macOS Command (requires sudo)",
+    "windowsCmdTitle": "Windows Command (requires admin)",
+    "tips": {
+      "usage": {
+        "title": "Usage",
+        "content": "Click 'Fetch Latest IPs' button to resolve GitHub domain IP addresses. After resolution, select your platform and copy the command, then execute it in terminal with administrator privileges."
+      },
+      "warning": {
+        "title": "Note",
+        "content": "Modifying hosts file requires administrator/root privileges. Make sure you understand the commands before executing. IP addresses may change, please re-fetch if connection issues occur."
+      }
+    },
+    "toast": {
+      "allSuccess": "All IPs fetched successfully",
+      "partialSuccess": "Some IPs fetched successfully",
+      "allFailed": "Failed to fetch IPs, please retry later",
+      "copied": "Command copied to clipboard",
+      "noCommand": "No command to copy"
     }
   }
 }

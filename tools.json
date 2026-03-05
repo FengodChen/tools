@@ -1,6 +1,19 @@
 {
   "tools": [
     {
+      "id": "github-hosts",
+      "name": "GitHub Hosts",
+      "description": "自动获取 GitHub 最新 IP 地址，一键生成 Linux/macOS/Windows hosts 修改命令",
+      "icon": "🐙",
+      "path": "tools/github-hosts/index.html",
+      "tags": [
+        "网络",
+        "GitHub",
+        "工具"
+      ],
+      "date": "2026-03-05"
+    },
+    {
       "id": "remove-background",
       "name": "背景去除工具",
       "description": "智能图片背景去除工具，支持白色/纯色背景去除，本地处理保护隐私",
