@@ -1,0 +1,323 @@
+{
+  "site": {
+    "title": "工具箱 | 实用小工具集合",
+    "logo": "🧰 工具箱",
+    "subtitle": "实用、便捷的在线工具集合",
+    "footer": "✨ 本站及小程序由 <a href=\"https://kimi.moonshot.cn\" target=\"_blank\" rel=\"noopener noreferrer\">Kimi.ai</a> 智能生成 🤖"
+  },
+  "search": {
+    "placeholder": "搜索工具...",
+    "icon": "🔍"
+  },
+  "stats": {
+    "total": "共 {{count}} 个工具",
+    "filtered": "显示 {{filtered}} 个工具（共 {{total}} 个）",
+    "tag": "标签：{{tag}}"
+  },
+  "empty": {
+    "icon": "🔍",
+    "title": "未找到匹配的工具",
+    "description": "尝试使用其他关键词搜索"
+  },
+  "back": "返回首页",
+  "tags": {
+    "工具": "工具",
+    "计算": "计算",
+    "颜色": "颜色",
+    "设计": "设计",
+    "编码": "编码",
+    "解码": "解码",
+    "Base64": "Base64",
+    "JSON": "JSON",
+    "格式化": "格式化",
+    "图片": "图片"
+  },
+  "language": {
+    "name": "简体中文",
+    "switch": "切换语言"
+  },
+  "tools": {
+    "timestamp-converter": {
+      "name": "时间戳转换器",
+      "description": "Unix 时间戳与日期时间相互转换"
+    },
+    "color-picker": {
+      "name": "颜色选择器",
+      "description": "颜色选择和转换工具，支持 HEX、RGB、HSL"
+    },
+    "base64-tool": {
+      "name": "Base64 编解码",
+      "description": "Base64 编码和解码工具，支持文本转换"
+    },
+    "json-formatter": {
+      "name": "JSON 格式化",
+      "description": "JSON 格式化、美化和压缩工具"
+    },
+    "remove-background": {
+      "name": "背景去除工具",
+      "description": "智能图片背景去除工具，支持白色/纯色背景去除，本地处理保护隐私"
+    }
+  },
+  "base64": {
+    "title": "🔐 Base64 编解码",
+    "subtitle": "Base64 编码和解码工具，支持文本和文件转换",
+    "input": {
+      "label": "输入内容",
+      "placeholder": "在此输入要编码或解码的内容..."
+    },
+    "output": {
+      "label": "结果",
+      "placeholder": "结果将显示在这里..."
+    },
+    "buttons": {
+      "encode": "编码",
+      "decode": "解码",
+      "clear": "清空",
+      "swap": "交换内容",
+      "copy": "复制"
+    },
+    "tips": {
+      "encode": {
+        "title": "编码说明",
+        "content": "Base64 编码用于将二进制数据转换为 ASCII 字符串，常用于数据传输和存储"
+      },
+      "warning": {
+        "title": "注意事项",
+        "content": "解码时输入必须是有效的 Base64 字符串，否则会提示错误"
+      }
+    },
+    "toast": {
+      "enterContent": "请输入内容",
+      "encodeSuccess": "编码成功",
+      "decodeSuccess": "解码成功",
+      "encodeError": "编码失败",
+      "decodeError": "解码失败: 无效的 Base64 字符串",
+      "cleared": "已清空",
+      "swapped": "内容已交换",
+      "copied": "已复制到剪贴板",
+      "nothingToCopy": "没有可复制的内容"
+    }
+  },
+  "colorPicker": {
+    "title": "🎨 颜色选择器",
+    "subtitle": "颜色选择和转换工具，支持 HEX、RGB、HSL 互转，色彩和谐生成",
+    "nativePicker": "点击选择颜色",
+    "buttons": {
+      "random": "随机颜色",
+      "save": "保存颜色",
+      "copy": "复制",
+      "clear": "清空"
+    },
+    "labels": {
+      "hex": "HEX",
+      "rgb": "RGB",
+      "hsl": "HSL"
+    },
+    "harmonies": {
+      "title": "色彩和谐",
+      "complementary": "互补色 (Complementary)",
+      "triadic": "三色搭配 (Triadic)",
+      "analogous": "类似色 (Analogous)"
+    },
+    "savedColors": {
+      "title": "已保存的颜色",
+      "empty": "暂无保存的颜色"
+    },
+    "tips": {
+      "usage": {
+        "title": "💡 使用技巧",
+        "content": "点击色彩和谐中的颜色可快速应用该颜色，支持 HEX、RGB、HSL 多种格式互转"
+      },
+      "harmony": {
+        "title": "🎨 色彩和谐",
+        "content": "互补色、三色搭配、类似色等和谐方案，助你快速创建美观的配色方案"
+      },
+      "storage": {
+        "title": "💾 本地存储",
+        "content": "保存的颜色会存储在浏览器本地，方便下次使用，可随时清空"
+      }
+    },
+    "toast": {
+      "randomGenerated": "已生成随机颜色",
+      "colorSaved": "颜色已保存",
+      "colorExists": "该颜色已存在",
+      "copied": "已复制",
+      "savedCleared": "已清空保存的颜色"
+    }
+  },
+  "jsonFormatter": {
+    "title": "📋 JSON 格式化工具",
+    "subtitle": "JSON 格式化、美化和压缩工具，支持语法校验",
+    "backToHome": "返回首页",
+    "input": {
+      "title": "输入 JSON",
+      "placeholder": "{\"key\": \"value\", \"number\": 123}"
+    },
+    "output": {
+      "title": "输出结果",
+      "placeholder": "格式化后的结果将显示在这里..."
+    },
+    "buttons": {
+      "format2": "格式化 (2空格)",
+      "format4": "4空格缩进",
+      "minify": "压缩",
+      "validate": "校验",
+      "clear": "清空",
+      "loadExample": "加载示例",
+      "copy": "复制",
+      "paste": "粘贴",
+      "download": "下载"
+    },
+    "stats": {
+      "charCount": "字符数:",
+      "size": "大小:",
+      "bytes": "B",
+      "keyCount": "键数:"
+    },
+    "tips": {
+      "tip1Title": "💡 使用技巧",
+      "tip1Desc": "支持快捷键 Ctrl+V 直接粘贴 JSON 内容，快速开始格式化",
+      "tip2Title": "✨ 智能校验",
+      "tip2Desc": "自动检测 JSON 语法错误，精确定位问题所在位置",
+      "tip3Title": "🔒 隐私保护",
+      "tip3Desc": "所有处理在本地浏览器完成，数据不会上传到服务器"
+    },
+    "toast": {
+      "message": "提示信息",
+      "emptyInput": "请输入 JSON 内容",
+      "formatSuccess": "格式化成功",
+      "minifySuccess": "压缩成功",
+      "parseError": "JSON 解析错误: {{message}}",
+      "validateSuccess": "✓ JSON 格式正确",
+      "cleared": "已清空",
+      "exampleLoaded": "已加载示例数据",
+      "nothingToCopy": "没有可复制的内容",
+      "nothingToDownload": "没有可下载的内容",
+      "copySuccess": "已复制到剪贴板",
+      "copyError": "复制失败",
+      "clipboardError": "无法访问剪贴板",
+      "pasted": "已粘贴",
+      "autoPasted": "📋 已粘贴到输入框",
+      "downloadSuccess": "文件已下载"
+    }
+  },
+  "timestampConverter": {
+    "title": "⏰ 时间戳转换器",
+    "subtitle": "Unix 时间戳与日期时间相互转换",
+    "backToHome": "返回首页",
+    "sections": {
+      "timestampToDate": {
+        "title": "时间戳转日期",
+        "label": "Unix 时间戳 (秒或毫秒)",
+        "placeholder": "例如: 1700000000"
+      },
+      "dateToTimestamp": {
+        "title": "日期转时间戳",
+        "label": "日期时间"
+      }
+    },
+    "buttons": {
+      "convertToDate": "转换为日期",
+      "now": "现在",
+      "convertToTimestamp": "转换为时间戳"
+    },
+    "result": {
+      "title": "转换结果",
+      "localTime": "本地时间",
+      "utcTime": "UTC时间",
+      "isoFormat": "ISO格式",
+      "seconds": "秒级",
+      "milliseconds": "毫秒级"
+    },
+    "tips": {
+      "what": {
+        "title": "💡 什么是时间戳",
+        "content": "Unix 时间戳是从 1970年1月1日 UTC 开始计算的秒数或毫秒数"
+      },
+      "auto": {
+        "title": "🔄 自动识别",
+        "content": "系统会自动识别秒级（10位）和毫秒级（13位）时间戳"
+      },
+      "shortcut": {
+        "title": "⚡ 快捷操作",
+        "content": "点击\"现在\"按钮可快速填充当前时间戳"
+      }
+    }
+  },
+  "removeBackground": {
+    "title": "🎨 透明背景转换器 Pro",
+    "subtitle": "智能去除白色/纯色背景，完美支持剪贴板操作",
+    "backToHome": "返回首页",
+    "buttons": {
+      "paste": "粘贴 (Ctrl+V)",
+      "upload": "上传图片",
+      "copyResult": "复制结果",
+      "download": "下载 PNG"
+    },
+    "settings": {
+      "title": "设置",
+      "tolerance": {
+        "label": "颜色容差",
+        "value": "30",
+        "hint": "数值越大，去除范围越广"
+      },
+      "mode": {
+        "label": "去除模式",
+        "white": "白色背景",
+        "color": "指定颜色",
+        "auto": "自动检测"
+      },
+      "targetColor": {
+        "label": "目标颜色",
+        "picker": "取色"
+      },
+      "options": {
+        "label": "选项",
+        "feather": "边缘羽化",
+        "invert": "反转选择"
+      }
+    },
+    "panels": {
+      "original": {
+        "title": "原始图片",
+        "placeholder": "按 Ctrl+V 粘贴图片"
+      },
+      "result": {
+        "title": "透明背景",
+        "placeholder": "处理后的图片"
+      }
+    },
+    "status": {
+      "waiting": "等待输入...",
+      "processing": "正在处理...",
+      "completed": "处理完成：已去除 {{percent}}% 的像素",
+      "transparentPixels": "透明像素: {{count}}"
+    },
+    "tips": {
+      "usage": {
+        "title": "💡 使用技巧",
+        "content": "如果背景去除不干净，尝试调高\"颜色容差\"数值（建议 20-50）"
+      },
+      "formats": {
+        "title": "🎨 支持格式",
+        "content": "支持 JPG、PNG、GIF、WebP 等常见格式，输出为透明 PNG"
+      },
+      "privacy": {
+        "title": "✨ 隐私保护",
+        "content": "所有处理在本地浏览器完成，图片不会上传到服务器"
+      }
+    },
+    "toast": {
+      "pasted": "📋 已从剪贴板粘贴图片",
+      "readClipboard": "✅ 读取剪贴板成功",
+      "noImage": "⚠️ 剪贴板中没有图片，请使用 Ctrl+V",
+      "useCtrlV": "请直接按 Ctrl+V 粘贴图片",
+      "copied": "✅ 已复制到剪贴板！",
+      "copyError": "❌ 复制失败，请尝试下载",
+      "downloadStarted": "⬇️ 下载已开始",
+      "uploadFirst": "请先上传或粘贴图片",
+      "pickColorHint": "🎨 点击原始图片选取颜色，按 ESC 取消",
+      "colorPicked": "✅ 已选取颜色 {{color}}"
+    }
+  }
+}

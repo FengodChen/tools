@@ -3,378 +3,409 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>颜色选择器</title>
-    <link rel="stylesheet" href="../../css/style.css">
+    <title data-i18n="colorPicker.title">颜色选择器 | Color Picker</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="../../js/i18n.js"></script>
     <style>
-        .tool-page {
-            max-width: 900px;
-            margin: 0 auto;
-            padding: 40px 24px;
-        }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
         
-        .back-link {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            color: var(--primary-color);
-            text-decoration: none;
-            font-size: 0.9375rem;
-            margin-bottom: 24px;
-            transition: color var(--transition-fast);
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #f8fafc;
+            min-height: 100vh;
         }
-        
-        .back-link:hover {
-            color: var(--primary-hover);
+
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         }
-        
-        .tool-header-detail {
-            margin-bottom: 32px;
+
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(0, 0, 0, 0.08);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
         }
-        
-        .tool-header-detail h1 {
-            font-size: 1.75rem;
-            margin-bottom: 8px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            transition: all 0.3s ease;
         }
-        
-        .tool-header-detail p {
-            color: var(--text-secondary);
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
         }
-        
-        .tool-content {
-            background: var(--bg-card);
-            border-radius: var(--border-radius-lg);
-            padding: 32px;
-            border: 1px solid var(--border-color);
+
+        .btn-secondary {
+            background: #e2e8f0;
+            color: #334155;
+            transition: all 0.3s ease;
         }
-        
-        .color-picker-main {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 32px;
-            margin-bottom: 32px;
+
+        .btn-secondary:hover {
+            background: #cbd5e1;
+            transform: translateY(-1px);
         }
-        
-        .color-preview-section {
-            display: flex;
-            flex-direction: column;
-            gap: 16px;
+
+        .color-input {
+            background: #ffffff;
+            border: 1px solid #cbd5e1;
+            color: #1e293b;
+            transition: all 0.2s ease;
         }
-        
-        .color-preview-large {
-            width: 100%;
-            height: 150px;
-            border-radius: var(--border-radius-lg);
-            border: 2px solid var(--border-color);
-            transition: background-color var(--transition-fast);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.25rem;
-            font-weight: 600;
-            color: white;
-            text-shadow: 0 1px 2px rgba(0,0,0,0.3);
-        }
-        
-        .native-picker-wrapper {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-        
-        input[type="color"] {
-            width: 60px;
-            height: 40px;
-            border: 2px solid var(--border-color);
-            border-radius: var(--border-radius-sm);
-            cursor: pointer;
-            background: none;
-        }
-        
-        .color-values {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-        }
-        
-        .color-value-item {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-        
-        .color-value-item label {
-            min-width: 60px;
-            font-weight: 500;
-            font-size: 0.875rem;
-        }
-        
-        .color-value-item input {
-            flex: 1;
-            padding: 10px 12px;
-            border: 2px solid var(--border-color);
-            border-radius: var(--border-radius-sm);
-            font-family: 'Monaco', monospace;
-            font-size: 0.9375rem;
+
+        .color-input:focus {
+            border-color: #667eea;
             outline: none;
-            transition: border-color var(--transition-fast);
+            box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.2);
         }
-        
-        .color-value-item input:focus {
-            border-color: var(--primary-color);
-        }
-        
-        .color-value-item button {
-            padding: 8px 16px;
-            background: var(--bg-secondary);
-            border: 1px solid var(--border-color);
-            border-radius: var(--border-radius-sm);
-            cursor: pointer;
-            font-size: 0.875rem;
-            transition: all var(--transition-fast);
-        }
-        
-        .color-value-item button:hover {
-            background: var(--border-color);
-        }
-        
-        .color-harmonies {
-            margin-top: 24px;
-            padding-top: 24px;
-            border-top: 1px solid var(--border-color);
-        }
-        
-        .harmonies-title {
-            font-size: 1rem;
-            font-weight: 600;
-            margin-bottom: 16px;
-            color: var(--text-primary);
-        }
-        
-        .harmony-section {
-            margin-bottom: 20px;
-        }
-        
-        .harmony-label {
-            font-size: 0.875rem;
-            color: var(--text-secondary);
-            margin-bottom: 8px;
-        }
-        
-        .harmony-colors {
-            display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
-        }
-        
+
         .harmony-color {
-            width: 60px;
-            height: 60px;
-            border-radius: var(--border-radius-md);
-            border: 2px solid var(--border-color);
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 0.75rem;
-            font-weight: 500;
-            color: white;
-            text-shadow: 0 1px 2px rgba(0,0,0,0.3);
-            transition: transform var(--transition-fast);
+            transition: transform 0.2s ease;
         }
-        
+
         .harmony-color:hover {
             transform: scale(1.1);
             z-index: 1;
         }
-        
-        .saved-colors {
-            margin-top: 24px;
-            padding-top: 24px;
-            border-top: 1px solid var(--border-color);
-        }
-        
-        .saved-colors-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 16px;
-        }
-        
-        .saved-colors-grid {
-            display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
-        }
-        
+
         .saved-color-item {
-            width: 40px;
-            height: 40px;
-            border-radius: var(--border-radius-sm);
-            border: 2px solid var(--border-color);
-            cursor: pointer;
-            transition: transform var(--transition-fast);
+            transition: transform 0.2s ease;
         }
-        
+
         .saved-color-item:hover {
             transform: scale(1.15);
         }
-        
-        .empty-saved {
-            color: var(--text-muted);
-            font-size: 0.875rem;
+
+        .toast {
+            animation: slideIn 0.3s ease-out;
         }
-        
-        .button-group {
-            display: flex;
-            gap: 12px;
-            flex-wrap: wrap;
+
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
         }
-        
-        .btn {
-            padding: 10px 20px;
+
+        input[type="color"] {
+            -webkit-appearance: none;
             border: none;
-            border-radius: var(--border-radius-md);
-            font-size: 0.9375rem;
-            font-weight: 500;
+            width: 60px;
+            height: 40px;
+            border-radius: 8px;
             cursor: pointer;
-            transition: all var(--transition-fast);
-            display: inline-flex;
+            background: none;
+        }
+
+        input[type="color"]::-webkit-color-swatch-wrapper {
+            padding: 0;
+        }
+
+        input[type="color"]::-webkit-color-swatch {
+            border: 2px solid #cbd5e1;
+            border-radius: 8px;
+        }
+
+        .section-title {
+            position: relative;
+            padding-left: 12px;
+        }
+
+        .section-title::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 4px;
+            height: 16px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 2px;
+        }
+
+        /* Language Switcher Styles */
+        .language-switcher-container {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            z-index: 100;
+        }
+
+        .language-switcher {
+            position: relative;
+        }
+
+        .lang-btn {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(0, 0, 0, 0.08);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            padding: 0.5rem 1rem;
+            border-radius: 0.75rem;
+            display: flex;
             align-items: center;
-            gap: 6px;
-        }
-        
-        .btn-primary {
-            background: var(--primary-color);
-            color: white;
-        }
-        
-        .btn-primary:hover {
-            background: var(--primary-hover);
-            transform: translateY(-1px);
-            box-shadow: var(--shadow-md);
-        }
-        
-        .btn-secondary {
-            background: var(--bg-secondary);
-            color: var(--text-primary);
-            border: 1px solid var(--border-color);
-        }
-        
-        .btn-secondary:hover {
-            background: var(--border-color);
-        }
-        
-        .message {
-            margin-top: 12px;
-            padding: 10px 16px;
-            border-radius: var(--border-radius-sm);
+            gap: 0.5rem;
+            cursor: pointer;
             font-size: 0.875rem;
+            font-weight: 500;
+            color: #334155;
+            transition: all 0.2s ease;
         }
-        
-        .message.success {
-            background: #f0fdf4;
-            color: #16a34a;
-            border-left: 3px solid #16a34a;
+
+        .lang-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 24px rgba(0, 0, 0, 0.12);
         }
-        
-        @media (max-width: 768px) {
-            .color-picker-main {
-                grid-template-columns: 1fr;
+
+        .lang-icon {
+            font-size: 1rem;
+        }
+
+        .lang-arrow {
+            font-size: 0.625rem;
+            transition: transform 0.2s ease;
+        }
+
+        .lang-btn[aria-expanded="true"] .lang-arrow {
+            transform: rotate(180deg);
+        }
+
+        .lang-dropdown {
+            position: absolute;
+            top: calc(100% + 0.5rem);
+            right: 0;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(0, 0, 0, 0.08);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+            border-radius: 0.75rem;
+            padding: 0.375rem;
+            min-width: 140px;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-8px);
+            transition: all 0.2s ease;
+        }
+
+        .lang-dropdown.show {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .lang-option {
+            width: 100%;
+            padding: 0.5rem 0.75rem;
+            border: none;
+            background: transparent;
+            border-radius: 0.5rem;
+            text-align: left;
+            cursor: pointer;
+            font-size: 0.875rem;
+            color: #334155;
+            transition: all 0.15s ease;
+        }
+
+        .lang-option:hover {
+            background: rgba(102, 126, 234, 0.1);
+            color: #667eea;
+        }
+
+        .lang-option.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            font-weight: 500;
+        }
+
+        @media (max-width: 640px) {
+            .language-switcher-container {
+                top: 0.5rem;
+                right: 0.5rem;
             }
-            
-            .tool-content {
-                padding: 20px;
+
+            .lang-btn {
+                padding: 0.375rem 0.75rem;
+            }
+
+            .lang-text {
+                display: none;
             }
         }
     </style>
 </head>
-<body>
-    <div class="tool-page">
-        <a href="../../index.html" class="back-link">← 返回工具箱</a>
-        
-        <div class="tool-header-detail">
-            <h1>🎨 颜色选择器</h1>
-            <p>颜色选择和转换工具，支持 HEX、RGB、HSL 互转，色彩和谐生成</p>
+<body class="text-slate-700 p-4 md:p-8">
+    <!-- Language Switcher -->
+    <div class="language-switcher-container"></div>
+
+    <div class="max-w-5xl mx-auto">
+        <!-- Back Link -->
+        <a href="../../index.html" class="inline-flex items-center gap-2 text-slate-500 hover:text-slate-800 transition-colors mb-6">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+            </svg>
+            <span data-i18n="back">返回首页</span>
+        </a>
+
+        <!-- Header -->
+        <div class="text-center mb-8">
+            <h1 class="text-4xl md:text-5xl font-bold mb-3 bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent" data-i18n="colorPicker.title">
+                🎨 颜色选择器
+            </h1>
+            <p class="text-slate-500 text-lg" data-i18n="colorPicker.subtitle">颜色选择和转换工具，支持 HEX、RGB、HSL 互转，色彩和谐生成</p>
         </div>
-        
-        <div class="tool-content">
-            <div class="color-picker-main">
-                <div class="color-preview-section">
-                    <div class="color-preview-large" id="colorPreview">#4F46E5</div>
-                    
-                    <div class="native-picker-wrapper">
+
+        <!-- Main Content -->
+        <div class="glass-panel rounded-2xl shadow-2xl p-6 md:p-8 mb-6">
+            <div class="grid md:grid-cols-2 gap-8">
+                <!-- Left Column: Preview & Controls -->
+                <div class="space-y-6">
+                    <!-- Color Preview -->
+                    <div>
+                        <div id="colorPreview" class="w-full h-40 rounded-xl border-2 border-slate-600 flex items-center justify-center text-xl font-semibold shadow-lg transition-colors duration-200" style="background-color: #4F46E5; color: #ffffff;">
+                            #4F46E5
+                        </div>
+                    </div>
+
+                    <!-- Native Color Picker -->
+                    <div class="flex items-center gap-4">
                         <input type="color" id="nativePicker" value="#4f46e5">
-                        <span>点击选择颜色</span>
+                        <span class="text-slate-500" data-i18n="colorPicker.nativePicker">点击选择颜色</span>
                     </div>
-                    
-                    <div class="button-group">
-                        <button class="btn btn-primary" onclick="randomColor()">🎲 随机颜色</button>
-                        <button class="btn btn-secondary" onclick="saveColor()">💾 保存颜色</button>
+
+                    <!-- Action Buttons -->
+                    <div class="flex flex-wrap gap-3">
+                        <button onclick="randomColor()" class="btn-primary text-white px-5 py-2.5 rounded-lg font-medium flex items-center gap-2 shadow-lg">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                            </svg>
+                            <span data-i18n="colorPicker.buttons.random">随机颜色</span>
+                        </button>
+                        <button onclick="saveColor()" class="btn-secondary text-white px-5 py-2.5 rounded-lg font-medium flex items-center gap-2 shadow-lg">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path>
+                            </svg>
+                            <span data-i18n="colorPicker.buttons.save">保存颜色</span>
+                        </button>
                     </div>
-                    
+
+                    <!-- Message Area -->
                     <div id="message"></div>
                 </div>
-                
-                <div class="color-values">
-                    <div class="color-value-item">
-                        <label>HEX</label>
-                        <input type="text" id="hexInput" value="#4F46E5" placeholder="#000000">
-                        <button onclick="copyValue('hexInput')">复制</button>
+
+                <!-- Right Column: Color Values -->
+                <div class="space-y-4">
+                    <!-- HEX Input -->
+                    <div class="space-y-2">
+                        <label class="text-sm font-medium text-slate-600" data-i18n="colorPicker.labels.hex">HEX</label>
+                        <div class="flex gap-2">
+                            <input type="text" id="hexInput" value="#4F46E5" class="color-input flex-1 px-4 py-3 rounded-lg text-slate-700 font-mono" >
+                            <button onclick="copyValue('hexInput')" class="btn-secondary text-white px-4 py-2 rounded-lg font-medium flex items-center gap-1">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                                </svg>
+                                <span data-i18n="colorPicker.buttons.copy">复制</span>
+                            </button>
+                        </div>
                     </div>
-                    
-                    <div class="color-value-item">
-                        <label>RGB</label>
-                        <input type="text" id="rgbInput" value="rgb(79, 70, 229)" placeholder="rgb(0, 0, 0)">
-                        <button onclick="copyValue('rgbInput')">复制</button>
+
+                    <!-- RGB Input -->
+                    <div class="space-y-2">
+                        <label class="text-sm font-medium text-slate-600" data-i18n="colorPicker.labels.rgb">RGB</label>
+                        <div class="flex gap-2">
+                            <input type="text" id="rgbInput" value="rgb(79, 70, 229)" class="color-input flex-1 px-4 py-3 rounded-lg text-slate-700 font-mono" >
+                            <button onclick="copyValue('rgbInput')" class="btn-secondary text-white px-4 py-2 rounded-lg font-medium flex items-center gap-1">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                                </svg>
+                                <span data-i18n="colorPicker.buttons.copy">复制</span>
+                            </button>
+                        </div>
                     </div>
-                    
-                    <div class="color-value-item">
-                        <label>HSL</label>
-                        <input type="text" id="hslInput" value="hsl(245, 79%, 59%)" placeholder="hsl(0, 0%, 0%)">
-                        <button onclick="copyValue('hslInput')">复制</button>
+
+                    <!-- HSL Input -->
+                    <div class="space-y-2">
+                        <label class="text-sm font-medium text-slate-600" data-i18n="colorPicker.labels.hsl">HSL</label>
+                        <div class="flex gap-2">
+                            <input type="text" id="hslInput" value="hsl(245, 79%, 59%)" class="color-input flex-1 px-4 py-3 rounded-lg text-slate-700 font-mono" >
+                            <button onclick="copyValue('hslInput')" class="btn-secondary text-white px-4 py-2 rounded-lg font-medium flex items-center gap-1">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                                </svg>
+                                <span data-i18n="colorPicker.buttons.copy">复制</span>
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
-            
-            <div class="color-harmonies">
-                <div class="harmonies-title">色彩和谐</div>
+
+            <!-- Color Harmonies -->
+            <div class="mt-8 pt-8 border-t border-slate-200">
+                <h3 class="section-title text-lg font-semibold text-slate-800 mb-6" data-i18n="colorPicker.harmonies.title">色彩和谐</h3>
                 
-                <div class="harmony-section">
-                    <div class="harmony-label">互补色 (Complementary)</div>
-                    <div class="harmony-colors" id="complementary"></div>
+                <!-- Complementary -->
+                <div class="mb-6">
+                    <div class="text-sm text-slate-600 mb-3" data-i18n="colorPicker.harmonies.complementary">互补色 (Complementary)</div>
+                    <div class="flex gap-3 flex-wrap" id="complementary"></div>
                 </div>
-                
-                <div class="harmony-section">
-                    <div class="harmony-label">三色搭配 (Triadic)</div>
-                    <div class="harmony-colors" id="triadic"></div>
+
+                <!-- Triadic -->
+                <div class="mb-6">
+                    <div class="text-sm text-slate-600 mb-3" data-i18n="colorPicker.harmonies.triadic">三色搭配 (Triadic)</div>
+                    <div class="flex gap-3 flex-wrap" id="triadic"></div>
                 </div>
-                
-                <div class="harmony-section">
-                    <div class="harmony-label">类似色 (Analogous)</div>
-                    <div class="harmony-colors" id="analogous"></div>
+
+                <!-- Analogous -->
+                <div>
+                    <div class="text-sm text-slate-600 mb-3" data-i18n="colorPicker.harmonies.analogous">类似色 (Analogous)</div>
+                    <div class="flex gap-3 flex-wrap" id="analogous"></div>
                 </div>
             </div>
-            
-            <div class="saved-colors">
-                <div class="saved-colors-header">
-                    <div class="harmonies-title">已保存的颜色</div>
-                    <button class="btn btn-secondary" onclick="clearSaved()">清空</button>
+
+            <!-- Saved Colors -->
+            <div class="mt-8 pt-8 border-t border-slate-200">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="section-title text-lg font-semibold text-slate-800" data-i18n="colorPicker.savedColors.title">已保存的颜色</h3>
+                    <button onclick="clearSaved()" class="btn-secondary text-white px-4 py-2 rounded-lg font-medium text-sm">
+                        <span data-i18n="colorPicker.buttons.clear">清空</span>
+                    </button>
                 </div>
-                <div class="saved-colors-grid" id="savedColors">
-                    <span class="empty-saved">暂无保存的颜色</span>
+                <div class="flex gap-3 flex-wrap" id="savedColors">
+                    <span class="text-slate-400 text-sm" data-i18n="colorPicker.savedColors.empty">暂无保存的颜色</span>
                 </div>
+            </div>
+        </div>
+
+        <!-- Tips -->
+        <div class="grid md:grid-cols-3 gap-4 text-sm">
+            <div class="glass-panel p-4 rounded-xl">
+                <h4 class="font-semibold text-blue-600 mb-2" data-i18n="colorPicker.tips.usage.title">💡 使用技巧</h4>
+                <p class="text-slate-600" data-i18n="colorPicker.tips.usage.content">点击色彩和谐中的颜色可快速应用该颜色，支持 HEX、RGB、HSL 多种格式互转</p>
+            </div>
+            <div class="glass-panel p-4 rounded-xl">
+                <h4 class="font-semibold text-purple-600 mb-2" data-i18n="colorPicker.tips.harmony.title">🎨 色彩和谐</h4>
+                <p class="text-slate-600" data-i18n="colorPicker.tips.harmony.content">互补色、三色搭配、类似色等和谐方案，助你快速创建美观的配色方案</p>
+            </div>
+            <div class="glass-panel p-4 rounded-xl">
+                <h4 class="font-semibold text-green-600 mb-2" data-i18n="colorPicker.tips.storage.title">💾 本地存储</h4>
+                <p class="text-slate-600" data-i18n="colorPicker.tips.storage.content">保存的颜色会存储在浏览器本地，方便下次使用，可随时清空</p>
             </div>
         </div>
     </div>
-    
+
+    <!-- Toast -->
+    <div id="toast" class="fixed top-4 right-4 bg-white border border-slate-200 text-slate-800 px-6 py-3 rounded-xl shadow-2xl transform translate-x-full transition-transform duration-300 z-[110] flex items-center gap-3 hidden">
+        <span id="toastIcon" class="text-xl">✅</span>
+        <span id="toastMessage" data-i18n="colorPicker.toast.copied">提示信息</span>
+    </div>
+
     <script>
         let currentColor = { r: 79, g: 70, b: 229 };
         
         // 初始化
-        document.addEventListener('DOMContentLoaded', () => {
+        document.addEventListener('DOMContentLoaded', async () => {
+            // 初始化 i18n
+            await I18N.init();
+            I18N.initLanguageSwitcher('.language-switcher-container');
+            
             updateAllFromRGB(currentColor.r, currentColor.g, currentColor.b);
             loadSavedColors();
             
@@ -468,7 +499,9 @@
             container.innerHTML = colors.map(hsl => {
                 const rgb = hslToRgb(hsl.h, hsl.s, hsl.l);
                 const hex = rgbToHex(rgb.r, rgb.g, rgb.b);
-                return `<div class="harmony-color" style="background-color: ${hex}" 
+                const textColor = getContrastColor(rgb.r, rgb.g, rgb.b);
+                return `<div class="harmony-color w-16 h-16 rounded-lg border-2 border-slate-600 cursor-pointer flex items-center justify-center text-xs font-medium shadow-md" 
+                            style="background-color: ${hex}; color: ${textColor};"
                             onclick="selectColor('${hex}')" title="${hex}">${hex}</div>`;
             }).join('');
         }
@@ -483,7 +516,7 @@
             const g = Math.floor(Math.random() * 256);
             const b = Math.floor(Math.random() * 256);
             updateAllFromRGB(r, g, b);
-            showMessage('已生成随机颜色', 'success');
+            showToast(I18N.t('colorPicker.toast.randomGenerated'), 'success');
         }
         
         function saveColor() {
@@ -494,9 +527,9 @@
                 if (saved.length > 20) saved = saved.slice(0, 20);
                 localStorage.setItem('savedColors', JSON.stringify(saved));
                 loadSavedColors();
-                showMessage('颜色已保存', 'success');
+                showToast(I18N.t('colorPicker.toast.colorSaved'), 'success');
             } else {
-                showMessage('该颜色已存在', 'success');
+                showToast(I18N.t('colorPicker.toast.colorExists'), 'info');
             }
         }
         
@@ -505,12 +538,13 @@
             const container = document.getElementById('savedColors');
             
             if (saved.length === 0) {
-                container.innerHTML = '<span class="empty-saved">暂无保存的颜色</span>';
+                container.innerHTML = `<span class="text-slate-500 text-sm" data-i18n="colorPicker.savedColors.empty">${I18N.t('colorPicker.savedColors.empty')}</span>`;
                 return;
             }
             
             container.innerHTML = saved.map(hex => 
-                `<div class="saved-color-item" style="background-color: ${hex}" 
+                `<div class="saved-color-item w-10 h-10 rounded-lg border-2 border-slate-600 cursor-pointer shadow-md" 
+                      style="background-color: ${hex}" 
                       onclick="selectColor('${hex}')" title="${hex}"></div>`
             ).join('');
         }
@@ -518,23 +552,39 @@
         function clearSaved() {
             localStorage.removeItem('savedColors');
             loadSavedColors();
-            showMessage('已清空保存的颜色', 'success');
+            showToast(I18N.t('colorPicker.toast.savedCleared'), 'success');
         }
         
         async function copyValue(inputId) {
             const input = document.getElementById(inputId);
             try {
                 await navigator.clipboard.writeText(input.value);
-                showMessage('已复制', 'success');
+                showToast(I18N.t('colorPicker.toast.copied'), 'success');
             } catch (e) {
-                showMessage('复制失败', 'error');
+                showToast(I18N.t('colorPicker.toast.copied'), 'error');
             }
         }
         
-        function showMessage(text, type) {
-            const msg = document.getElementById('message');
-            msg.innerHTML = `<div class="message ${type}">${text}</div>`;
-            setTimeout(() => msg.innerHTML = '', 2000);
+        function showToast(message, type = 'info') {
+            const toast = document.getElementById('toast');
+            const icon = document.getElementById('toastIcon');
+            const msg = document.getElementById('toastMessage');
+            
+            const icons = {
+                success: '✅',
+                error: '❌',
+                warning: '⚠️',
+                info: 'ℹ️'
+            };
+            
+            icon.textContent = icons[type] || icons.info;
+            msg.textContent = message;
+            
+            toast.classList.remove('translate-x-full');
+            
+            setTimeout(() => {
+                toast.classList.add('translate-x-full');
+            }, 2000);
         }
         
         // 颜色转换函数

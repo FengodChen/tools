@@ -10,6 +10,7 @@
 - 📱 **响应式布局** - 完美适配桌面和移动设备
 - ⚡ **自动发现** - 通过 `tools.json` 配置自动展示工具
 - 🛠️ **易于扩展** - 简单的添加新工具流程
+- 🌐 **国际化支持** - 自动根据浏览器语言切换简体中文/英文，支持手动切换
 
 ## 📁 项目结构
 
@@ -20,14 +21,17 @@
 ├── css/
 │   └── style.css          # 主样式文件
 ├── js/
-│   └── main.js            # 主页面脚本（搜索、筛选、渲染）
+│   ├── i18n.js            # 国际化模块
+│   ├── main.js            # 主页面脚本（搜索、筛选、渲染）
+│   └── locales/           # 语言文件
+│       ├── zh-CN.json     # 简体中文
+│       └── en.json        # 英文
 ├── tools/                  # 工具目录
 │   ├── base64-tool/        # Base64 编解码工具
-│   │   └── index.html
 │   ├── json-formatter/     # JSON 格式化工具
-│   │   └── index.html
-│   └── color-picker/       # 颜色选择器
-│       └── index.html
+│   ├── color-picker/       # 颜色选择器
+│   ├── timestamp-converter/# 时间戳转换器
+│   └── remove-background/  # 背景去除工具
 └── README.md
 ```
 
@@ -108,7 +112,7 @@ tools/
 </head>
 <body>
     <div class="tool-page">
-        <a href="../../index.html" class="back-link">← 返回工具箱</a>
+        <a href="../../index.html" class="back-link">返回首页</a>
         
         <div class="tool-header-detail">
             <h1>🔧 工具名称</h1>
@@ -175,6 +179,8 @@ git push
 | 🔐 Base64 编解码 | Base64 编码和解码，支持文本转换 | 编码、解码、Base64 |
 | 📋 JSON 格式化 | JSON 格式化、美化和压缩 | JSON、格式化、工具 |
 | 🎨 颜色选择器 | 颜色选择和转换，支持 HEX、RGB、HSL | 颜色、设计、工具 |
+| ⏰ 时间戳转换器 | Unix 时间戳与日期时间相互转换 | 工具、计算 |
+| 🖼️ 背景去除工具 | 智能图片背景去除，支持白色/纯色背景 | 图片、设计、工具 |
 
 ## 🔧 自定义配置
 
@@ -200,6 +206,19 @@ git push
 <h1 class="logo">🧰 工具箱</h1>
 <p class="subtitle">实用、便捷的在线工具集合</p>
 ```
+
+### 国际化 (i18n)
+
+本项目支持简体中文和英文自动切换。系统会：
+1. 自动检测浏览器语言偏好
+2. 保存用户语言选择到 localStorage
+3. 支持页面右上角手动切换语言
+
+如需添加新的翻译语言：
+1. 在 `js/locales/` 目录下创建新的语言文件（如 `ja.json`）
+2. 复制 `en.json` 的内容并翻译
+3. 在 `js/i18n.js` 中添加语言到 `supportedLangs` 列表
+4. 在 `js/i18n.js` 的 `langNames` 中添加语言显示名称
 
 ## 📝 开发说明
 

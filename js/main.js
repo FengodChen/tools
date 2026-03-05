@@ -26,10 +26,21 @@ const elements = {
  */
 async function init() {
     try {
+        // 初始化国际化
+        await I18N.init();
+        
+        // 初始化语言切换器
+        I18N.initLanguageSwitcher('.language-switcher-container');
+        
         await loadTools();
         extractAllTags();
         setupEventListeners();
         render();
+        
+        // 监听语言变化事件，重新渲染
+        document.addEventListener('i18n:updated', () => {
+            render();
+        });
     } catch (error) {
         console.error('初始化失败:', error);
         showError('加载工具列表失败，请刷新页面重试');
@@ -156,11 +167,13 @@ function renderFilterTags() {
     
     const tagsHtml = state.allTags.map(tag => {
         const isActive = state.activeTag === tag;
+        // 使用 i18n 翻译标签
+        const displayTag = I18N.t(`tags.${tag}`) !== `tags.${tag}` ? I18N.t(`tags.${tag}`) : tag;
         return `
             <button class="tag ${isActive ? 'active' : ''}" 
                     data-tag="${escapeHtml(tag)}"
                     onclick="handleTagClick('${escapeHtml(tag)}')">
-                ${escapeHtml(tag)}
+                ${escapeHtml(displayTag)}
             </button>
         `;
     }).join('');
@@ -190,17 +203,27 @@ function renderTools() {
  * 创建工具卡片 HTML
  */
 function createToolCard(tool) {
-    const tagsHtml = (tool.tags || []).map(tag => 
-        `<span class="tool-tag">${escapeHtml(tag)}</span>`
-    ).join('');
+    const tagsHtml = (tool.tags || []).map(tag => {
+        // 使用 i18n 翻译标签
+        const displayTag = I18N.t(`tags.${tag}`) !== `tags.${tag}` ? I18N.t(`tags.${tag}`) : tag;
+        return `<span class="tool-tag">${escapeHtml(displayTag)}</span>`;
+    }).join('');
+    
+    // 使用 i18n 翻译工具名称和描述
+    const toolKey = tool.id.replace(/-/g, '');
+    const i18nNameKey = `tools.${tool.id}.name`;
+    const i18nDescKey = `tools.${tool.id}.description`;
+    
+    const displayName = I18N.t(i18nNameKey) !== i18nNameKey ? I18N.t(i18nNameKey) : tool.name;
+    const displayDesc = I18N.t(i18nDescKey) !== i18nDescKey ? I18N.t(i18nDescKey) : tool.description;
     
     return `
         <a href="${escapeHtml(tool.path)}" class="tool-card" data-tool-id="${escapeHtml(tool.id)}">
             <div class="tool-header">
                 <div class="tool-icon">${escapeHtml(tool.icon || '🔧')}</div>
-                <h3 class="tool-title">${escapeHtml(tool.name)}</h3>
+                <h3 class="tool-title">${escapeHtml(displayName)}</h3>
             </div>
-            <p class="tool-description">${escapeHtml(tool.description)}</p>
+            <p class="tool-description">${escapeHtml(displayDesc)}</p>
             <div class="tool-tags">${tagsHtml}</div>
         </a>
     `;
@@ -215,13 +238,15 @@ function renderStats() {
     
     let statsText = '';
     if (filtered === total) {
-        statsText = `共 ${total} 个工具`;
+        statsText = I18N.t('stats.total', { count: total });
     } else {
-        statsText = `显示 ${filtered} 个工具（共 ${total} 个）`;
+        statsText = I18N.t('stats.filtered', { filtered, total });
     }
     
     if (state.activeTag) {
-        statsText += ` · 标签：${state.activeTag}`;
+        // 使用 i18n 翻译标签
+        const displayTag = I18N.t(`tags.${state.activeTag}`) !== `tags.${state.activeTag}` ? I18N.t(`tags.${state.activeTag}`) : state.activeTag;
+        statsText += ` · ${I18N.t('stats.tag', { tag: displayTag })}`;
     }
     
     elements.stats.textContent = statsText;
@@ -244,7 +269,7 @@ function showError(message) {
     elements.toolsGrid.innerHTML = `
         <div class="empty-state" style="display: block;">
             <div class="empty-icon">⚠️</div>
-            <h3>出错了</h3>
+            <h3 data-i18n="empty.errorTitle">出错了</h3>
             <p>${escapeHtml(message)}</p>
         </div>
     `;

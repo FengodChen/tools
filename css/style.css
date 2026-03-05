@@ -66,10 +66,117 @@ body {
 .header {
     background: linear-gradient(135deg, var(--primary-color) 0%, #7c3aed 100%);
     color: white;
-    padding: 60px 0;
+    padding: 20px 0 60px;
     text-align: center;
     position: relative;
     overflow: hidden;
+}
+
+/* Header Top - 语言切换器容器 */
+.header-top {
+    position: relative;
+    height: 40px;
+    margin-bottom: 20px;
+}
+
+.language-switcher-container {
+    position: absolute;
+    right: 0;
+    top: 0;
+}
+
+/* 语言切换器样式 */
+.language-switcher {
+    position: relative;
+    display: inline-block;
+}
+
+.lang-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 14px;
+    background: rgba(255, 255, 255, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 24px;
+    color: white;
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    backdrop-filter: blur(8px);
+}
+
+.lang-btn:hover {
+    background: rgba(255, 255, 255, 0.25);
+    border-color: rgba(255, 255, 255, 0.35);
+}
+
+.lang-icon {
+    font-size: 1rem;
+}
+
+.lang-text {
+    white-space: nowrap;
+}
+
+.lang-arrow {
+    font-size: 0.625rem;
+    opacity: 0.7;
+    transition: transform var(--transition-fast);
+}
+
+.lang-dropdown.show + .lang-btn .lang-arrow,
+.lang-dropdown.show ~ .lang-btn .lang-arrow,
+.lang-btn[aria-expanded="true"] .lang-arrow {
+    transform: rotate(180deg);
+}
+
+/* 下拉菜单 */
+.lang-dropdown {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    min-width: 140px;
+    background: white;
+    border-radius: var(--border-radius-md);
+    box-shadow: var(--shadow-lg);
+    border: 1px solid var(--border-color);
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-10px);
+    transition: all var(--transition-fast);
+    z-index: 100;
+    overflow: hidden;
+}
+
+.lang-dropdown.show {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+.lang-option {
+    display: block;
+    width: 100%;
+    padding: 10px 16px;
+    text-align: left;
+    background: none;
+    border: none;
+    color: var(--text-primary);
+    font-size: 0.9375rem;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.lang-option:hover {
+    background: var(--bg-secondary);
+}
+
+.lang-option.active {
+    background: var(--primary-light);
+    color: var(--primary-color);
+    font-weight: 500;
 }
 
 .header::before {
@@ -310,7 +417,17 @@ body {
 /* ===== 响应式设计 ===== */
 @media (max-width: 768px) {
     .header {
-        padding: 40px 0;
+        padding: 16px 0 40px;
+    }
+
+    .header-top {
+        height: 36px;
+        margin-bottom: 16px;
+    }
+
+    .lang-btn {
+        padding: 6px 12px;
+        font-size: 0.8125rem;
     }
     
     .logo {

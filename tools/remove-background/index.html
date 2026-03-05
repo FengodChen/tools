@@ -3,230 +3,119 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="智能图片背景去除工具，支持白色/纯色背景去除，本地处理保护隐私">
-    <title>🖼️ 背景去除工具</title>
-    <link rel="stylesheet" href="../../css/style.css">
+    <title>透明背景转换器 Pro | Background Remover</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="../../js/i18n.js"></script>
     <style>
-        .tool-page {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 40px 24px;
-        }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
         
-        .back-link {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            color: var(--primary-color);
-            text-decoration: none;
-            font-size: 0.9375rem;
-            margin-bottom: 24px;
-            transition: color var(--transition-fast);
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #f8fafc;
+            min-height: 100vh;
         }
-        
-        .back-link:hover {
-            color: var(--primary-hover);
+
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         }
-        
-        .tool-header-detail {
-            margin-bottom: 32px;
+
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(0, 0, 0, 0.08);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
         }
-        
-        .tool-header-detail h1 {
-            font-size: 1.75rem;
-            margin-bottom: 8px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
+
+        .checkerboard {
+            background-color: #ffffff;
+            background-image: 
+                linear-gradient(45deg, #e2e8f0 25%, transparent 25%), 
+                linear-gradient(-45deg, #e2e8f0 25%, transparent 25%), 
+                linear-gradient(45deg, transparent 75%, #e2e8f0 75%), 
+                linear-gradient(-45deg, transparent 75%, #e2e8f0 75%);
+            background-size: 20px 20px;
+            background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
         }
-        
-        .tool-header-detail p {
-            color: var(--text-secondary);
+
+        .canvas-container {
+            background: #ffffff;
+            border: 2px dashed #cbd5e1;
+            transition: all 0.3s ease;
         }
-        
-        .tool-content {
-            background: var(--bg-card);
-            border-radius: var(--border-radius-lg);
-            padding: 32px;
-            border: 1px solid var(--border-color);
+
+        .canvas-container:hover {
+            border-color: #667eea;
+            background: rgba(102, 126, 234, 0.03);
         }
-        
-        /* 工具栏 */
-        .toolbar {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 12px;
-            margin-bottom: 24px;
-            padding-bottom: 24px;
-            border-bottom: 1px solid var(--border-color);
+
+        .canvas-container.has-image {
+            border-style: solid;
+            border-color: #e2e8f0;
         }
-        
-        .btn {
-            padding: 10px 20px;
-            border: none;
-            border-radius: var(--border-radius-md);
-            font-size: 0.9375rem;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all var(--transition-fast);
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-        }
-        
+
         .btn-primary {
-            background: var(--primary-color);
-            color: white;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            transition: all 0.3s ease;
         }
-        
+
         .btn-primary:hover:not(:disabled) {
-            background: var(--primary-hover);
-            transform: translateY(-1px);
-            box-shadow: var(--shadow-md);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
         }
-        
-        .btn-secondary {
-            background: var(--bg-secondary);
-            color: var(--text-primary);
-            border: 1px solid var(--border-color);
-        }
-        
-        .btn-secondary:hover:not(:disabled) {
-            background: var(--border-color);
-        }
-        
-        .btn:disabled {
+
+        .btn-primary:disabled {
             opacity: 0.5;
             cursor: not-allowed;
         }
-        
-        .btn-success {
-            background: #16a34a;
-            color: white;
-        }
-        
-        .btn-success:hover:not(:disabled) {
-            background: #15803d;
-        }
-        
-        /* 设置面板 */
-        .settings-panel {
-            background: var(--bg-secondary);
-            border-radius: var(--border-radius-md);
-            padding: 20px;
-            margin-bottom: 24px;
-            border: 1px solid var(--border-color);
-        }
-        
-        .settings-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 20px;
-        }
-        
-        .setting-item {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-        
-        .setting-item label {
-            font-weight: 500;
-            font-size: 0.875rem;
-            color: var(--text-primary);
-        }
-        
-        .setting-item label.checkbox {
-            flex-direction: row;
-            align-items: center;
-            display: flex;
-            gap: 8px;
-            cursor: pointer;
-        }
-        
-        .setting-item input[type="checkbox"] {
-            width: 18px;
-            height: 18px;
-            accent-color: var(--primary-color);
-        }
-        
-        .setting-item select,
-        .setting-item input[type="text"] {
-            padding: 10px 12px;
-            border: 2px solid var(--border-color);
-            border-radius: var(--border-radius-sm);
-            font-size: 0.9375rem;
-            background: var(--bg-card);
-            outline: none;
-            transition: border-color var(--transition-fast);
-        }
-        
-        .setting-item select:focus,
-        .setting-item input[type="text"]:focus {
-            border-color: var(--primary-color);
-        }
-        
-        /* 滑块 */
-        .slider-container {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-        
-        .slider-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        
-        .slider-value {
-            font-family: monospace;
-            color: var(--primary-color);
-            font-weight: 600;
-        }
-        
-        input[type="range"] {
-            width: 100%;
-            height: 6px;
-            border-radius: 3px;
-            background: var(--border-color);
-            outline: none;
+
+        .slider {
             -webkit-appearance: none;
+            appearance: none;
+            height: 6px;
+            background: #e2e8f0;
+            border-radius: 3px;
+            outline: none;
         }
-        
-        input[type="range"]::-webkit-slider-thumb {
+
+        .slider::-webkit-slider-thumb {
             -webkit-appearance: none;
             appearance: none;
             width: 18px;
             height: 18px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             border-radius: 50%;
-            background: var(--primary-color);
             cursor: pointer;
-            box-shadow: var(--shadow-sm);
-            transition: transform var(--transition-fast);
+            box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+            transition: transform 0.2s;
         }
-        
-        input[type="range"]::-webkit-slider-thumb:hover {
+
+        .slider::-webkit-slider-thumb:hover {
             transform: scale(1.2);
         }
-        
-        /* 颜色选择器 */
-        .color-picker-row {
-            display: flex;
-            gap: 10px;
-            align-items: center;
+
+        .fade-in {
+            animation: fadeIn 0.5s ease-out;
         }
-        
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .toast {
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
         .color-picker-wrapper {
             position: relative;
-            width: 44px;
-            height: 44px;
-            border-radius: var(--border-radius-sm);
             overflow: hidden;
-            border: 2px solid var(--border-color);
-            cursor: pointer;
         }
-        
+
         .color-picker-wrapper input[type="color"] {
             position: absolute;
             top: -50%;
@@ -236,362 +125,349 @@
             cursor: pointer;
             opacity: 0;
         }
-        
-        /* 画布区域 */
-        .canvas-area {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 24px;
-            margin-bottom: 20px;
+
+        .picking-cursor {
+            cursor: crosshair !important;
         }
-        
-        .canvas-panel {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-        }
-        
-        .panel-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        
-        .panel-title {
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        
-        .panel-title::before {
-            content: '';
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background: var(--text-muted);
-        }
-        
-        .panel-title.active::before {
-            background: #16a34a;
-        }
-        
-        .panel-info {
-            font-size: 0.8125rem;
-            color: var(--text-secondary);
-            font-family: monospace;
-        }
-        
-        .canvas-container {
-            position: relative;
-            min-height: 350px;
-            background: var(--bg-secondary);
-            border: 2px dashed var(--border-color);
-            border-radius: var(--border-radius-md);
-            overflow: hidden;
-            transition: all var(--transition-fast);
-        }
-        
-        .canvas-container:hover {
-            border-color: var(--primary-color);
-        }
-        
-        .canvas-container.has-image {
-            border-style: solid;
-            border-color: var(--border-color);
-        }
-        
-        .canvas-container.drag-over {
-            border-color: var(--primary-color);
-            background: var(--primary-light);
-        }
-        
-        canvas {
-            display: block;
-            max-width: 100%;
-            max-height: 500px;
-            margin: 0 auto;
-        }
-        
-        .canvas-placeholder {
+
+        .picking-overlay {
             position: absolute;
             inset: 0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            color: var(--text-muted);
-            text-align: center;
-            padding: 20px;
+            background: rgba(102, 126, 234, 0.1);
+            border: 2px solid #667eea;
+            border-radius: 0.75rem;
+            pointer-events: none;
+            animation: pulse 1.5s ease-in-out infinite;
         }
-        
-        .canvas-placeholder svg {
-            width: 64px;
-            height: 64px;
-            margin-bottom: 16px;
-            opacity: 0.5;
+
+        @keyframes pulse {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 0.6; }
         }
-        
-        /* 透明背景格子 */
-        .checkerboard {
-            background-color: #ffffff;
-            background-image: 
-                linear-gradient(45deg, #e5e7eb 25%, transparent 25%), 
-                linear-gradient(-45deg, #e5e7eb 25%, transparent 25%), 
-                linear-gradient(45deg, transparent 75%, #e5e7eb 75%), 
-                linear-gradient(-45deg, transparent 75%, #e5e7eb 75%);
-            background-size: 20px 20px;
-            background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
-        }
-        
-        /* 状态栏 */
-        .status-bar {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding-top: 16px;
-            border-top: 1px solid var(--border-color);
-            font-size: 0.875rem;
-            color: var(--text-secondary);
-        }
-        
-        /* 提示卡片 */
-        .tips-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 16px;
-            margin-top: 24px;
-        }
-        
-        .tip-card {
-            background: var(--bg-secondary);
-            border-radius: var(--border-radius-md);
-            padding: 16px;
-            border: 1px solid var(--border-color);
-        }
-        
-        .tip-card h4 {
-            font-size: 0.9375rem;
-            font-weight: 600;
-            margin-bottom: 8px;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-        
-        .tip-card p {
-            font-size: 0.875rem;
-            color: var(--text-secondary);
-            line-height: 1.5;
-        }
-        
-        /* Toast 提示 */
-        .toast {
+
+        .color-preview {
             position: fixed;
-            top: 20px;
-            right: 20px;
-            background: var(--bg-card);
-            border: 1px solid var(--border-color);
-            border-radius: var(--border-radius-md);
-            padding: 16px 20px;
-            box-shadow: var(--shadow-lg);
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            border: 3px solid white;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            pointer-events: none;
+            z-index: 1000;
+            display: none;
+            background-size: cover;
+        }
+
+        .color-preview::after {
+            content: attr(data-color);
+            position: absolute;
+            bottom: -25px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-family: monospace;
+            white-space: nowrap;
+        }
+
+        /* Language Switcher Styles */
+        .language-switcher-container {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            z-index: 100;
+        }
+
+        .language-switcher {
+            position: relative;
+        }
+
+        .language-switcher .lang-btn {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(0, 0, 0, 0.08);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            padding: 0.5rem 1rem;
+            border-radius: 0.75rem;
             display: flex;
             align-items: center;
-            gap: 12px;
-            transform: translateX(150%);
-            transition: transform 0.3s ease;
-            z-index: 1000;
+            gap: 0.5rem;
+            cursor: pointer;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: #334155;
+            transition: all 0.2s ease;
         }
-        
-        .toast.show {
-            transform: translateX(0);
+
+        .language-switcher .lang-btn:hover {
+            background: rgba(255, 255, 255, 1);
+            box-shadow: 0 6px 24px rgba(0, 0, 0, 0.12);
+            transform: translateY(-1px);
         }
-        
-        .toast-icon {
-            font-size: 1.25rem;
+
+        .language-switcher .lang-icon {
+            font-size: 1rem;
         }
-        
-        /* 隐藏的文件输入 */
-        .file-input {
-            display: none;
+
+        .language-switcher .lang-arrow {
+            font-size: 0.625rem;
+            transition: transform 0.2s ease;
         }
-        
-        @media (max-width: 768px) {
-            .tool-content {
-                padding: 20px;
-            }
-            
-            .canvas-area {
-                grid-template-columns: 1fr;
-            }
-            
-            .toolbar {
-                flex-direction: column;
-            }
-            
-            .toolbar .btn {
-                width: 100%;
-                justify-content: center;
-            }
-            
-            .canvas-container {
-                min-height: 250px;
-            }
+
+        .language-switcher .lang-dropdown.show + .lang-btn .lang-arrow,
+        .language-switcher .lang-dropdown.show ~ .lang-btn .lang-arrow,
+        .language-switcher:has(.lang-dropdown.show) .lang-arrow {
+            transform: rotate(180deg);
+        }
+
+        .language-switcher .lang-dropdown {
+            position: absolute;
+            top: calc(100% + 0.5rem);
+            right: 0;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(0, 0, 0, 0.08);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+            border-radius: 0.75rem;
+            padding: 0.5rem;
+            min-width: 140px;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px);
+            transition: all 0.2s ease;
+        }
+
+        .language-switcher .lang-dropdown.show {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .language-switcher .lang-option {
+            width: 100%;
+            padding: 0.5rem 0.75rem;
+            border: none;
+            border-radius: 0.5rem;
+            background: transparent;
+            text-align: left;
+            font-size: 0.875rem;
+            color: #475569;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .language-switcher .lang-option:hover {
+            background: rgba(102, 126, 234, 0.1);
+            color: #667eea;
+        }
+
+        .language-switcher .lang-option.active {
+            background: rgba(102, 126, 234, 0.15);
+            color: #667eea;
+            font-weight: 500;
         }
     </style>
 </head>
-<body>
-    <div class="tool-page">
-        <a href="../../index.html" class="back-link">← 返回工具箱</a>
-        
-        <div class="tool-header-detail">
-            <h1>🖼️ 背景去除工具</h1>
-            <p>智能去除图片白色/纯色背景，支持剪贴板操作，本地处理保护隐私</p>
+<body class="text-slate-700 p-4 md:p-8">
+    <!-- Language Switcher Container -->
+    <div class="language-switcher-container"></div>
+
+    <div class="max-w-6xl mx-auto">
+        <!-- Back Link -->
+        <a href="../../index.html" class="inline-flex items-center gap-2 text-slate-500 hover:text-slate-800 transition-colors mb-6">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+            </svg>
+            <span data-i18n="removeBackground.backToHome">返回首页</span>
+        </a>
+
+        <!-- Header -->
+        <div class="text-center mb-8">
+            <h1 class="text-4xl md:text-5xl font-bold mb-3 bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent" data-i18n="removeBackground.title">
+                🎨 透明背景转换器 Pro
+            </h1>
+            <p class="text-slate-500 text-lg" data-i18n="removeBackground.subtitle">智能去除白色/纯色背景，完美支持剪贴板操作</p>
         </div>
-        
-        <div class="tool-content">
-            <!-- 工具栏 -->
-            <div class="toolbar">
-                <button class="btn btn-primary" onclick="pasteFromClipboard()">
-                    <span>📋</span> 粘贴图片 (Ctrl+V)
+
+        <!-- Main Content -->
+        <div class="glass-panel rounded-2xl shadow-2xl p-6 md:p-8 mb-6">
+            
+            <!-- Toolbar -->
+            <div class="flex flex-wrap gap-3 mb-6 justify-center">
+                <button onclick="pasteFromClipboard()" class="btn-primary text-white px-5 py-2.5 rounded-lg font-medium flex items-center gap-2 shadow-lg">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
+                    <span data-i18n="removeBackground.buttons.paste">粘贴 (Ctrl+V)</span>
                 </button>
                 
-                <label class="btn btn-secondary" style="cursor: pointer;">
-                    <span>📁</span> 上传图片
-                    <input type="file" class="file-input" id="fileInput" accept="image/*" onchange="handleFileSelect(event)">
+                <label class="btn-primary text-white px-5 py-2.5 rounded-lg font-medium flex items-center gap-2 shadow-lg cursor-pointer">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                    <span data-i18n="removeBackground.buttons.upload">上传图片</span>
+                    <input type="file" id="fileInput" accept="image/*" class="hidden" onchange="handleFileSelect(event)">
                 </label>
-                
-                <button class="btn btn-success" id="copyBtn" onclick="copyToClipboard()" disabled>
-                    <span>📋</span> 复制结果
+
+                <button onclick="copyToClipboard()" id="copyBtn" class="bg-green-600 hover:bg-green-700 disabled:bg-slate-300 text-white px-5 py-2.5 rounded-lg font-medium flex items-center gap-2 shadow-lg transition-all" disabled>
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"></path></svg>
+                    <span data-i18n="removeBackground.buttons.copyResult">复制结果</span>
                 </button>
-                
-                <button class="btn btn-secondary" id="downloadBtn" onclick="downloadImage()" disabled>
-                    <span>⬇️</span> 下载 PNG
+
+                <button onclick="downloadImage()" id="downloadBtn" class="bg-slate-600 hover:bg-slate-500 disabled:bg-slate-300 text-white px-5 py-2.5 rounded-lg font-medium flex items-center gap-2 shadow-lg transition-all" disabled>
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                    <span data-i18n="removeBackground.buttons.download">下载 PNG</span>
                 </button>
             </div>
-            
-            <!-- 设置面板 -->
-            <div class="settings-panel">
-                <div class="settings-grid">
-                    <!-- 颜色容差 -->
-                    <div class="setting-item">
-                        <div class="slider-container">
-                            <div class="slider-header">
-                                <label>颜色容差</label>
-                                <span class="slider-value" id="toleranceValue">30</span>
-                            </div>
-                            <input type="range" id="tolerance" min="0" max="100" value="30" oninput="updateSettings()">
+
+            <!-- Settings Panel -->
+            <div class="bg-slate-100 rounded-xl p-4 mb-6 border border-slate-200">
+                <div class="grid md:grid-cols-4 gap-4 items-start">
+                    <!-- Tolerance -->
+                    <div class="space-y-2">
+                        <div class="flex justify-between items-center h-5">
+                            <label class="text-slate-700 font-medium text-sm" data-i18n="removeBackground.settings.tolerance.label">颜色容差</label>
+                            <span id="toleranceValue" class="text-blue-600 font-mono text-sm">30</span>
                         </div>
+                        <div class="h-[42px] flex items-center">
+                            <input type="range" id="tolerance" min="0" max="100" value="30" class="slider w-full" oninput="updateSettings()">
+                        </div>
+                        <p class="text-xs text-slate-400 h-4" data-i18n="removeBackground.settings.tolerance.hint">数值越大，去除范围越广</p>
                     </div>
-                    
-                    <!-- 去除模式 -->
-                    <div class="setting-item">
-                        <label>去除模式</label>
-                        <select id="removeMode" onchange="updateSettings()">
-                            <option value="white">白色背景</option>
-                            <option value="color">指定颜色</option>
-                            <option value="auto">自动检测</option>
+
+                    <!-- Mode -->
+                    <div class="space-y-2">
+                        <label class="text-slate-700 font-medium text-sm block h-5" data-i18n="removeBackground.settings.mode.label">去除模式</label>
+                        <select id="removeMode" class="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-sm text-slate-700 focus:outline-none focus:border-blue-500 h-[42px]" onchange="updateSettings()">
+                            <option value="white" data-i18n="removeBackground.settings.mode.white">白色背景</option>
+                            <option value="color" data-i18n="removeBackground.settings.mode.color">指定颜色</option>
+                            <option value="auto" data-i18n="removeBackground.settings.mode.auto">自动检测</option>
                         </select>
                     </div>
-                    
-                    <!-- 颜色选择器 -->
-                    <div class="setting-item" id="colorPickerContainer" style="display: none;">
-                        <label>目标颜色</label>
-                        <div class="color-picker-row">
-                            <div class="color-picker-wrapper" style="background-color: #ffffff;" id="colorPreview">
+
+                    <!-- Color Picker (hidden by default) -->
+                    <div class="space-y-2" id="colorPickerContainer" style="display: none;">
+                        <label class="text-slate-700 font-medium text-sm block h-5" data-i18n="removeBackground.settings.targetColor.label">目标颜色</label>
+                        <div class="flex gap-2 h-[42px] items-center">
+                            <div class="color-picker-wrapper w-10 h-10 rounded-lg border-2 border-slate-600 overflow-hidden shrink-0" style="background-color: #ffffff;">
                                 <input type="color" id="targetColor" value="#ffffff" onchange="updateSettings()">
                             </div>
-                            <input type="text" id="colorHex" value="#FFFFFF" style="flex: 1;" onchange="updateColorFromHex()">
+                            <input type="text" id="colorHex" value="#FFFFFF" class="w-16 bg-white border border-slate-300 rounded-lg px-2 py-2 text-sm uppercase text-slate-700 h-10" onchange="updateColorFromHex()">
+                            <button onclick="startColorPicking()" id="pickColorBtn" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-1 h-10 shrink-0" data-i18n-title="removeBackground.settings.targetColor.picker">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122"></path></svg>
+                                <span data-i18n="removeBackground.settings.targetColor.picker">取色</span>
+                            </button>
                         </div>
+                        <p id="pickColorHint" class="text-xs text-blue-600 hidden h-4" data-i18n="removeBackground.toast.pickColorHint">点击原始图片选取颜色</p>
                     </div>
-                    
-                    <!-- 选项 -->
-                    <div class="setting-item" style="flex-direction: row; gap: 20px; align-items: flex-end;">
-                        <label class="checkbox">
-                            <input type="checkbox" id="feather" checked onchange="updateSettings()">
-                            <span>边缘羽化</span>
-                        </label>
-                        <label class="checkbox">
-                            <input type="checkbox" id="invert" onchange="updateSettings()">
-                            <span>反转选择</span>
-                        </label>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- 画布区域 -->
-            <div class="canvas-area">
-                <div class="canvas-panel">
-                    <div class="panel-header">
-                        <span class="panel-title" id="originalTitle">原始图片</span>
-                        <span class="panel-info" id="originalInfo"></span>
-                    </div>
-                    <div class="canvas-container" id="originalContainer">
-                        <canvas id="originalCanvas" class="hidden"></canvas>
-                        <div class="canvas-placeholder" id="originalPlaceholder">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                                <path d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                            </svg>
-                            <p>拖拽图片到此处<br>或按 Ctrl+V 粘贴</p>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="canvas-panel">
-                    <div class="panel-header">
-                        <span class="panel-title active" id="resultTitle">透明背景</span>
-                        <span class="panel-info" id="resultInfo"></span>
-                    </div>
-                    <div class="canvas-container checkerboard" id="resultContainer">
-                        <canvas id="resultCanvas" class="hidden"></canvas>
-                        <div class="canvas-placeholder" id="resultPlaceholder">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                                <path d="M19.428 15.428a2 2 0 00-1.022-.547l-2.384-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/>
-                            </svg>
-                            <p>处理后的图片将显示在这里</p>
+
+                    <!-- Options -->
+                    <div class="space-y-2">
+                        <label class="text-slate-700 font-medium text-sm block h-5" data-i18n="removeBackground.settings.options.label">选项</label>
+                        <div class="flex flex-col gap-2 h-[42px] justify-center">
+                            <label class="flex items-center gap-2 cursor-pointer">
+                                <input type="checkbox" id="feather" checked onchange="updateSettings()" class="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 bg-white">
+                                <span class="text-sm text-slate-600" data-i18n="removeBackground.settings.options.feather">边缘羽化</span>
+                            </label>
+                            <label class="flex items-center gap-2 cursor-pointer">
+                                <input type="checkbox" id="invert" onchange="updateSettings()" class="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 bg-white">
+                                <span class="text-sm text-slate-600" data-i18n="removeBackground.settings.options.invert">反转选择</span>
+                            </label>
                         </div>
                     </div>
                 </div>
             </div>
-            
-            <!-- 状态栏 -->
-            <div class="status-bar">
-                <span id="statusText">等待输入...</span>
-                <span id="pixelInfo"></span>
+
+            <!-- Canvas Area -->
+            <div class="grid lg:grid-cols-2 gap-6">
+                <!-- Original -->
+                <div class="space-y-3">
+                    <div class="flex justify-between items-center">
+                        <h3 class="font-semibold text-slate-700 flex items-center gap-2">
+                            <span class="w-2 h-2 bg-slate-500 rounded-full"></span>
+                            <span data-i18n="removeBackground.panels.original.title">原始图片</span>
+                        </h3>
+                        <span id="originalInfo" class="text-xs text-slate-400 font-mono"></span>
+                    </div>
+                    <div class="canvas-container rounded-xl overflow-hidden relative" style="min-height: 400px;" id="originalContainer">
+                        <canvas id="originalCanvas" class="w-full h-full object-contain hidden"></canvas>
+                        <div class="absolute inset-0 flex flex-col items-center justify-center text-slate-400 pointer-events-none" id="originalPlaceholder">
+                            <svg class="w-16 h-16 mb-3 opacity-30" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                            <p class="text-sm" data-i18n="removeBackground.panels.original.placeholder">按 Ctrl+V 粘贴图片</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Result -->
+                <div class="space-y-3">
+                    <div class="flex justify-between items-center">
+                        <h3 class="font-semibold text-slate-700 flex items-center gap-2">
+                            <span class="w-2 h-2 bg-green-500 rounded-full"></span>
+                            <span data-i18n="removeBackground.panels.result.title">透明背景</span>
+                        </h3>
+                        <span id="resultInfo" class="text-xs text-slate-400 font-mono"></span>
+                    </div>
+                    <div class="checkerboard rounded-xl overflow-hidden relative border-2 border-slate-700" style="min-height: 400px;" id="resultContainer">
+                        <canvas id="resultCanvas" class="w-full h-full object-contain hidden"></canvas>
+                        <div class="absolute inset-0 flex flex-col items-center justify-center text-slate-400 pointer-events-none bg-slate-200/50" id="resultPlaceholder">
+                            <svg class="w-16 h-16 mb-3 opacity-30" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.384-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path></svg>
+                            <p class="text-sm" data-i18n="removeBackground.panels.result.placeholder">处理后的图片</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Status Bar -->
+            <div class="mt-6 flex justify-between items-center text-sm text-slate-500 border-t border-slate-200 pt-4">
+                <div id="statusText" data-i18n="removeBackground.status.waiting">等待输入...</div>
+                <div class="flex gap-4">
+                    <span id="pixelInfo"></span>
+                </div>
             </div>
         </div>
-        
-        <!-- 提示卡片 -->
-        <div class="tips-grid">
-            <div class="tip-card">
-                <h4><span>💡</span> 使用技巧</h4>
-                <p>如果背景去除不干净，尝试调高"颜色容差"数值（建议 20-50）</p>
+
+        <!-- Tips -->
+        <div class="grid md:grid-cols-3 gap-4 text-sm">
+            <div class="bg-slate-100 p-4 rounded-xl border border-slate-200">
+                <h4 class="font-semibold text-blue-600 mb-2" data-i18n="removeBackground.tips.usage.title">💡 使用技巧</h4>
+                <p class="text-slate-600" data-i18n="removeBackground.tips.usage.content">如果背景去除不干净，尝试调高"颜色容差"数值（建议 20-50）</p>
             </div>
-            <div class="tip-card">
-                <h4><span>🎨</span> 支持格式</h4>
-                <p>支持 JPG、PNG、GIF、WebP 等常见格式，输出为透明 PNG</p>
+            <div class="bg-slate-100 p-4 rounded-xl border border-slate-200">
+                <h4 class="font-semibold text-purple-600 mb-2" data-i18n="removeBackground.tips.formats.title">🎨 支持格式</h4>
+                <p class="text-slate-600" data-i18n="removeBackground.tips.formats.content">支持 JPG、PNG、GIF、WebP 等常见格式，输出为透明 PNG</p>
             </div>
-            <div class="tip-card">
-                <h4><span>🔒</span> 隐私保护</h4>
-                <p>所有处理在本地浏览器完成，图片不会上传到服务器</p>
+            <div class="bg-slate-100 p-4 rounded-xl border border-slate-200">
+                <h4 class="font-semibold text-green-600 mb-2" data-i18n="removeBackground.tips.privacy.title">✨ 隐私保护</h4>
+                <p class="text-slate-600" data-i18n="removeBackground.tips.privacy.content">所有处理在本地浏览器完成，图片不会上传到服务器</p>
             </div>
         </div>
     </div>
-    
+
     <!-- Toast -->
-    <div class="toast" id="toast">
-        <span class="toast-icon" id="toastIcon">ℹ️</span>
-        <span id="toastMessage">提示信息</span>
+    <div id="toast" class="fixed top-4 right-4 bg-white border border-slate-200 text-slate-800 px-6 py-3 rounded-xl shadow-2xl transform translate-x-full transition-transform duration-300 z-[110] flex items-center gap-3 hidden">
+        <span id="toastIcon" class="text-xl">ℹ️</span>
+        <span id="toastMessage" data-i18n="removeBackground.toast.copied">提示信息</span>
     </div>
-    
+
+    <!-- Color Preview for Picking -->
+    <div id="colorPreview" class="color-preview" data-color=""></div>
+
     <script>
         let originalImage = null;
         let originalImageData = null;
         let isProcessing = false;
+        let isPickingColor = false;
 
         // 初始化
         document.addEventListener('DOMContentLoaded', () => {
+            // 初始化 i18n
+            I18N.init().then(() => {
+                I18N.initLanguageSwitcher('.language-switcher-container');
+            });
+
+            // 全局粘贴监听
             document.addEventListener('paste', handleGlobalPaste);
+            
+            // 拖拽支持
             setupDragDrop();
         });
 
@@ -603,30 +479,31 @@
                 if (item.type.indexOf('image') !== -1) {
                     const blob = item.getAsFile();
                     loadImage(blob);
-                    showToast('✅ 已从剪贴板粘贴图片', 'success');
+                    showToast(I18N.t('removeBackground.toast.pasted'), 'success');
                     return;
                 }
             }
         }
 
         function setupDragDrop() {
-            const containers = ['originalContainer', 'resultContainer'];
+            const containers = [document.getElementById('originalContainer'), document.getElementById('resultContainer')];
             
-            containers.forEach(id => {
-                const container = document.getElementById(id);
-                
+            containers.forEach(container => {
                 container.addEventListener('dragover', (e) => {
                     e.preventDefault();
-                    container.classList.add('drag-over');
+                    container.style.borderColor = '#667eea';
+                    container.style.background = 'rgba(102, 126, 234, 0.1)';
                 });
                 
                 container.addEventListener('dragleave', () => {
-                    container.classList.remove('drag-over');
+                    container.style.borderColor = '';
+                    container.style.background = '';
                 });
                 
                 container.addEventListener('drop', (e) => {
                     e.preventDefault();
-                    container.classList.remove('drag-over');
+                    container.style.borderColor = '';
+                    container.style.background = '';
                     const files = e.dataTransfer.files;
                     if (files.length > 0 && files[0].type.startsWith('image/')) {
                         loadImage(files[0]);
@@ -643,14 +520,14 @@
                         if (type.startsWith('image/')) {
                             const blob = await item.getType(type);
                             await loadImage(blob);
-                            showToast('✅ 读取剪贴板成功', 'success');
+                            showToast(I18N.t('removeBackground.toast.readClipboard'), 'success');
                             return;
                         }
                     }
                 }
-                showToast('⚠️ 剪贴板中没有图片', 'warning');
+                showToast(I18N.t('removeBackground.toast.noImage'), 'warning');
             } catch (err) {
-                showToast('请直接按 Ctrl+V 粘贴图片', 'info');
+                showToast(I18N.t('removeBackground.toast.useCtrlV'), 'info');
             }
         }
 
@@ -680,7 +557,7 @@
             const canvas = document.getElementById('originalCanvas');
             const ctx = canvas.getContext('2d');
             
-            // 限制最大尺寸
+            // 设置画布尺寸（限制最大尺寸以保证性能）
             const maxSize = 2000;
             let width = img.width;
             let height = img.height;
@@ -695,22 +572,27 @@
             canvas.height = height;
             ctx.drawImage(img, 0, 0, width, height);
             
+            // 保存原始数据
             originalImageData = ctx.getImageData(0, 0, width, height);
             
             // 更新 UI
             canvas.classList.remove('hidden');
             document.getElementById('originalPlaceholder').classList.add('hidden');
             document.getElementById('originalContainer').classList.add('has-image');
-            document.getElementById('originalTitle').classList.add('active');
             document.getElementById('originalInfo').textContent = `${Math.round(width)}×${Math.round(height)}`;
-            document.getElementById('statusText').textContent = '已加载图片，正在处理...';
+            document.getElementById('statusText').textContent = I18N.t('removeBackground.status.processing');
         }
 
         function updateSettings() {
             const mode = document.getElementById('removeMode').value;
             const colorContainer = document.getElementById('colorPickerContainer');
             
-            colorContainer.style.display = mode === 'color' ? 'block' : 'none';
+            if (mode === 'color') {
+                colorContainer.style.display = 'block';
+            } else {
+                colorContainer.style.display = 'none';
+            }
+            
             document.getElementById('toleranceValue').textContent = document.getElementById('tolerance').value;
             
             if (originalImage) {
@@ -722,7 +604,7 @@
             const hex = document.getElementById('colorHex').value;
             if (/^#[0-9A-F]{6}$/i.test(hex)) {
                 document.getElementById('targetColor').value = hex;
-                document.getElementById('colorPreview').style.backgroundColor = hex;
+                document.querySelector('.color-picker-wrapper').style.backgroundColor = hex;
                 processImage();
             }
         }
@@ -734,9 +616,11 @@
             const canvas = document.getElementById('resultCanvas');
             const ctx = canvas.getContext('2d');
             
+            // 设置尺寸
             canvas.width = originalImageData.width;
             canvas.height = originalImageData.height;
             
+            // 复制原始数据
             const newImageData = new ImageData(
                 new Uint8ClampedArray(originalImageData.data),
                 originalImageData.width,
@@ -749,14 +633,15 @@
             const feather = document.getElementById('feather').checked;
             const invert = document.getElementById('invert').checked;
             
+            // 获取目标颜色
             let targetR = 255, targetG = 255, targetB = 255;
-            
             if (mode === 'color') {
                 const hex = document.getElementById('targetColor').value;
                 targetR = parseInt(hex.slice(1, 3), 16);
                 targetG = parseInt(hex.slice(3, 5), 16);
                 targetB = parseInt(hex.slice(5, 7), 16);
             } else if (mode === 'auto') {
+                // 自动检测四角颜色作为背景
                 const corners = [
                     0, 
                     (originalImageData.width - 1) * 4,
@@ -774,6 +659,7 @@
                 targetB = avgB / 4;
             }
             
+            // 处理像素
             let transparentPixels = 0;
             
             for (let i = 0; i < data.length; i += 4) {
@@ -781,26 +667,31 @@
                 const g = data[i + 1];
                 const b = data[i + 2];
                 
+                // 计算颜色距离
                 const distance = Math.sqrt(
                     Math.pow(r - targetR, 2) + 
                     Math.pow(g - targetG, 2) + 
                     Math.pow(b - targetB, 2)
                 );
                 
+                // 判断是否匹配目标颜色
                 let isMatch = distance <= tolerance;
                 if (invert) isMatch = !isMatch;
                 
                 if (isMatch) {
                     if (feather && distance > tolerance * 0.5) {
+                        // 羽化边缘：根据距离计算透明度
                         const alpha = Math.min(255, Math.max(0, (distance - tolerance * 0.5) / (tolerance * 0.5) * 255));
                         data[i + 3] = alpha;
                     } else {
+                        // 完全透明
                         data[i + 3] = 0;
                         transparentPixels++;
                     }
                 }
             }
             
+            // 将处理后的数据绘制到画布
             ctx.putImageData(newImageData, 0, 0);
             
             // 更新 UI
@@ -812,8 +703,8 @@
             
             const totalPixels = canvas.width * canvas.height;
             const percent = ((transparentPixels / totalPixels) * 100).toFixed(1);
-            document.getElementById('statusText').textContent = `处理完成：已去除 ${percent}% 的像素`;
-            document.getElementById('pixelInfo').textContent = `透明像素: ${transparentPixels.toLocaleString()}`;
+            document.getElementById('statusText').textContent = I18N.t('removeBackground.status.completed', { percent: percent });
+            document.getElementById('pixelInfo').textContent = I18N.t('removeBackground.status.transparentPixels', { count: transparentPixels.toLocaleString() });
             
             isProcessing = false;
         }
@@ -824,7 +715,7 @@
             try {
                 canvas.toBlob(async (blob) => {
                     if (!blob) {
-                        showToast('❌ 生成图片失败', 'error');
+                        showToast(I18N.t('removeBackground.toast.copyError'), 'error');
                         return;
                     }
                     
@@ -832,13 +723,14 @@
                         await navigator.clipboard.write([
                             new ClipboardItem({ 'image/png': blob })
                         ]);
-                        showToast('✅ 已复制到剪贴板！', 'success');
+                        showToast(I18N.t('removeBackground.toast.copied'), 'success');
                     } catch (err) {
-                        showToast('❌ 复制失败，请尝试下载', 'error');
+                        console.error('Clipboard error:', err);
+                        showToast(I18N.t('removeBackground.toast.copyError'), 'error');
                     }
                 }, 'image/png');
             } catch (err) {
-                showToast('❌ 浏览器不支持此功能', 'error');
+                showToast(I18N.t('removeBackground.toast.copyError'), 'error');
             }
         }
 
@@ -848,7 +740,7 @@
             link.download = `transparent_${Date.now()}.png`;
             link.href = canvas.toDataURL('image/png');
             link.click();
-            showToast('⬇️ 下载已开始', 'success');
+            showToast(I18N.t('removeBackground.toast.downloadStarted'), 'success');
         }
 
         function showToast(message, type = 'info') {
@@ -866,19 +758,182 @@
             icon.textContent = icons[type] || icons.info;
             msg.textContent = message;
             
-            toast.classList.add('show');
+            // 移除 hidden 类，然后滑入显示
+            toast.classList.remove('hidden');
+            toast.classList.remove('translate-x-full');
             
             setTimeout(() => {
-                toast.classList.remove('show');
+                toast.classList.add('translate-x-full');
+                // 等待动画完成后隐藏
+                setTimeout(() => {
+                    toast.classList.add('hidden');
+                }, 300);
             }, 3000);
         }
 
         // 颜色选择器同步
         document.getElementById('targetColor').addEventListener('input', (e) => {
-            document.getElementById('colorPreview').style.backgroundColor = e.target.value;
+            document.querySelector('.color-picker-wrapper').style.backgroundColor = e.target.value;
             document.getElementById('colorHex').value = e.target.value.toUpperCase();
             processImage();
         });
+
+        // 从图片选取颜色功能
+        function startColorPicking() {
+            if (!originalImage) {
+                showToast(I18N.t('removeBackground.toast.uploadFirst'), 'warning');
+                return;
+            }
+            
+            isPickingColor = true;
+            const container = document.getElementById('originalContainer');
+            const canvas = document.getElementById('originalCanvas');
+            const hint = document.getElementById('pickColorHint');
+            const btn = document.getElementById('pickColorBtn');
+            const preview = document.getElementById('colorPreview');
+            
+            // 添加视觉反馈
+            container.classList.add('picking-cursor');
+            hint.classList.remove('hidden');
+            btn.classList.add('bg-red-600', 'hover:bg-red-700');
+            btn.classList.remove('bg-blue-600', 'hover:bg-blue-700');
+            btn.innerHTML = '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg> ' + I18N.t('removeBackground.buttons.paste');
+            btn.onclick = stopColorPicking;
+            
+            // 添加叠加层动画
+            let overlay = container.querySelector('.picking-overlay');
+            if (!overlay) {
+                overlay = document.createElement('div');
+                overlay.className = 'picking-overlay';
+                container.appendChild(overlay);
+            }
+            
+            // 绑定点击事件
+            canvas.addEventListener('click', handleColorPick);
+            canvas.addEventListener('mousemove', handleColorPreview);
+            document.addEventListener('keydown', handlePickKeydown);
+            
+            showToast(I18N.t('removeBackground.toast.pickColorHint'), 'info');
+        }
+        
+        function stopColorPicking() {
+            isPickingColor = false;
+            const container = document.getElementById('originalContainer');
+            const canvas = document.getElementById('originalCanvas');
+            const hint = document.getElementById('pickColorHint');
+            const btn = document.getElementById('pickColorBtn');
+            const preview = document.getElementById('colorPreview');
+            
+            container.classList.remove('picking-cursor');
+            hint.classList.add('hidden');
+            btn.classList.remove('bg-red-600', 'hover:bg-red-700');
+            btn.classList.add('bg-blue-600', 'hover:bg-blue-700');
+            btn.innerHTML = '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122"></path></svg> ' + I18N.t('removeBackground.settings.targetColor.picker');
+            btn.onclick = startColorPicking;
+            
+            // 移除叠加层
+            const overlay = container.querySelector('.picking-overlay');
+            if (overlay) overlay.remove();
+            
+            // 隐藏预览
+            preview.style.display = 'none';
+            
+            // 解绑事件
+            canvas.removeEventListener('click', handleColorPick);
+            canvas.removeEventListener('mousemove', handleColorPreview);
+            document.removeEventListener('keydown', handlePickKeydown);
+        }
+        
+        function handlePickKeydown(e) {
+            if (e.key === 'Escape') {
+                stopColorPicking();
+            }
+        }
+        
+        function handleColorPreview(e) {
+            if (!isPickingColor || !originalImageData) return;
+            
+            const canvas = document.getElementById('originalCanvas');
+            const preview = document.getElementById('colorPreview');
+            const rect = canvas.getBoundingClientRect();
+            
+            // 计算实际缩放比例
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+            
+            // 获取鼠标在 canvas 上的坐标
+            const x = Math.floor((e.clientX - rect.left) * scaleX);
+            const y = Math.floor((e.clientY - rect.top) * scaleY);
+            
+            // 检查边界
+            if (x < 0 || x >= canvas.width || y < 0 || y >= canvas.height) {
+                preview.style.display = 'none';
+                return;
+            }
+            
+            // 获取颜色
+            const pixelIndex = (y * canvas.width + x) * 4;
+            const r = originalImageData.data[pixelIndex];
+            const g = originalImageData.data[pixelIndex + 1];
+            const b = originalImageData.data[pixelIndex + 2];
+            const hex = rgbToHex(r, g, b);
+            
+            // 更新预览
+            preview.style.display = 'block';
+            preview.style.left = (e.clientX + 15) + 'px';
+            preview.style.top = (e.clientY + 15) + 'px';
+            preview.style.backgroundColor = hex;
+            preview.setAttribute('data-color', hex.toUpperCase());
+        }
+        
+        function handleColorPick(e) {
+            if (!isPickingColor || !originalImageData) return;
+            
+            const canvas = document.getElementById('originalCanvas');
+            const rect = canvas.getBoundingClientRect();
+            
+            // 计算实际缩放比例
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+            
+            // 获取点击位置在 canvas 上的坐标
+            const x = Math.floor((e.clientX - rect.left) * scaleX);
+            const y = Math.floor((e.clientY - rect.top) * scaleY);
+            
+            // 检查边界
+            if (x < 0 || x >= canvas.width || y < 0 || y >= canvas.height) return;
+            
+            // 获取颜色
+            const pixelIndex = (y * canvas.width + x) * 4;
+            const r = originalImageData.data[pixelIndex];
+            const g = originalImageData.data[pixelIndex + 1];
+            const b = originalImageData.data[pixelIndex + 2];
+            const hex = rgbToHex(r, g, b);
+            
+            // 设置为目标颜色
+            document.getElementById('targetColor').value = hex;
+            document.querySelector('.color-picker-wrapper').style.backgroundColor = hex;
+            document.getElementById('colorHex').value = hex.toUpperCase();
+            
+            // 切换到指定颜色模式
+            document.getElementById('removeMode').value = 'color';
+            document.getElementById('colorPickerContainer').style.display = 'block';
+            
+            // 重新处理图片
+            processImage();
+            
+            // 停止取色模式
+            stopColorPicking();
+            
+            showToast(I18N.t('removeBackground.toast.colorPicked', { color: hex.toUpperCase() }), 'success');
+        }
+        
+        function rgbToHex(r, g, b) {
+            return '#' + [r, g, b].map(x => {
+                const hex = x.toString(16);
+                return hex.length === 1 ? '0' + hex : hex;
+            }).join('');
+        }
     </script>
 </body>
 </html>

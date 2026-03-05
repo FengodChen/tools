@@ -3,14 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>工具箱 | 实用小工具集合</title>
+    <title data-i18n="site.title">工具箱 | 实用小工具集合</title>
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
     <header class="header">
         <div class="container">
-            <h1 class="logo">🧰 工具箱</h1>
-            <p class="subtitle">实用、便捷的在线工具集合</p>
+            <div class="header-top">
+                <div class="language-switcher-container"></div>
+            </div>
+            <h1 class="logo" data-i18n="site.logo">🧰 工具箱</h1>
+            <p class="subtitle" data-i18n="site.subtitle">实用、便捷的在线工具集合</p>
         </div>
     </header>
 
@@ -19,7 +22,7 @@
             <!-- 搜索和筛选区域 -->
             <div class="toolbar">
                 <div class="search-box">
-                    <input type="text" id="searchInput" placeholder="搜索工具..." class="search-input">
+                    <input type="text" id="searchInput" data-i18n-placeholder="search.placeholder" placeholder="搜索工具..." class="search-input">
                     <span class="search-icon">🔍</span>
                 </div>
                 <div class="filter-tags" id="filterTags">
@@ -39,19 +42,20 @@
 
             <!-- 空状态提示 -->
             <div class="empty-state" id="emptyState" style="display: none;">
-                <div class="empty-icon">🔍</div>
-                <h3>未找到匹配的工具</h3>
-                <p>尝试使用其他关键词搜索</p>
+                <div class="empty-icon" data-i18n="empty.icon">🔍</div>
+                <h3 data-i18n="empty.title">未找到匹配的工具</h3>
+                <p data-i18n="empty.description">尝试使用其他关键词搜索</p>
             </div>
         </div>
     </main>
 
     <footer class="footer">
         <div class="container">
-            <p>Built with ❤️ for GitHub Pages</p>
+            <p data-i18n="site.footer" data-i18n-html="true">✨ 本站及小程序由 <a href="https://kimi.moonshot.cn" target="_blank" rel="noopener noreferrer">Kimi.ai</a> 智能生成 🤖</p>
         </div>
     </footer>
 
+    <script src="js/i18n.js"></script>
     <script src="js/main.js"></script>
 </body>
 </html>
