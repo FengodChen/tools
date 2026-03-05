@@ -105,8 +105,8 @@
     }
   },
   "colorPicker": {
-    "title": "🎨 颜色选择器",
-    "subtitle": "颜色选择和转换工具，支持 HEX、RGB、HSL 互转，色彩和谐生成",
+    "title": "🎨 科研颜色选择器",
+    "subtitle": "专为科研论文和学术图表设计的颜色选择工具，支持期刊配色、色盲友好方案",
     "nativePicker": "点击选择颜色",
     "buttons": {
       "random": "随机颜色",
@@ -117,30 +117,72 @@
     "labels": {
       "hex": "HEX",
       "rgb": "RGB",
-      "hsl": "HSL"
+      "hsl": "HSL",
+      "cmyk": "CMYK"
     },
     "harmonies": {
       "title": "色彩和谐",
-      "complementary": "互补色 (Complementary)",
-      "triadic": "三色搭配 (Triadic)",
-      "analogous": "类似色 (Analogous)"
+      "showAll": "显示全部",
+      "showAllDesc": "查看所有色彩和谐方案",
+      "complementary": "互补色",
+      "complementaryDesc": "色轮相对位置的颜色，对比强烈，适合强调重点",
+      "triadic": "三色搭配",
+      "triadicDesc": "色轮上等距分布的三个颜色，色彩丰富且平衡",
+      "splitComplementary": "分裂互补色",
+      "splitComplementaryDesc": "一种颜色与其互补色两侧的颜色，对比强烈但更柔和",
+      "tetradic": "四色搭配",
+      "tetradicDesc": "两组互补色组成，色彩丰富，适合复杂图表",
+      "analogous": "类似色",
+      "analogousDesc": "色轮上相邻的颜色，和谐统一，适合渐变效果",
+      "monochromatic": "单色系",
+      "monochromaticDesc": "同一色相的不同明度变化，简洁优雅，层次分明"
     },
     "savedColors": {
       "title": "已保存的颜色",
       "empty": "暂无保存的颜色"
     },
+    "palettes": {
+      "title": "科研配色方案",
+      "tabs": {
+        "journal": "期刊配色",
+        "colorblind": "色盲友好",
+        "sequential": "渐变色",
+        "diverging": "分歧色"
+      },
+      "nature": "Nature",
+      "science": "Science",
+      "cell": "Cell",
+      "lancet": "Lancet",
+      "okabeIto": "Okabe-Ito",
+      "tolVibrant": "Tol Vibrant",
+      "tolMuted": "Tol Muted",
+      "wong": "Wong",
+      "viridis": "Viridis",
+      "plasma": "Plasma",
+      "inferno": "Inferno",
+      "magma": "Magma",
+      "blues": "Blues",
+      "greens": "Greens",
+      "rdbu": "Red-Blue",
+      "spectral": "Spectral",
+      "piyg": "Pink-Green",
+      "brbg": "Brown-Teal"
+    },
+    "export": {
+      "title": "导出配色"
+    },
     "tips": {
-      "usage": {
-        "title": "💡 使用技巧",
-        "content": "点击色彩和谐中的颜色可快速应用该颜色，支持 HEX、RGB、HSL 多种格式互转"
+      "journal": {
+        "title": "📚 期刊配色",
+        "content": "内置 Nature、Science、Cell 等顶级期刊常用配色方案，确保图表专业美观"
       },
-      "harmony": {
-        "title": "🎨 色彩和谐",
-        "content": "互补色、三色搭配、类似色等和谐方案，助你快速创建美观的配色方案"
+      "colorblind": {
+        "title": "♿ 色盲友好",
+        "content": "提供 Okabe-Ito 等色盲友好配色方案，确保图表对所有读者都可访问"
       },
-      "storage": {
-        "title": "💾 本地存储",
-        "content": "保存的颜色会存储在浏览器本地，方便下次使用，可随时清空"
+      "export": {
+        "title": "💻 代码导出",
+        "content": "一键导出 Matplotlib、LaTeX、R 等代码，直接在论文作图中使用"
       }
     },
     "toast": {
@@ -148,7 +190,11 @@
       "colorSaved": "颜色已保存",
       "colorExists": "该颜色已存在",
       "copied": "已复制",
-      "savedCleared": "已清空保存的颜色"
+      "savedCleared": "已清空保存的颜色",
+      "paletteSelected": "已选择配色方案",
+      "colorFromPalette": "已选择配色",
+      "colorApplied": "颜色已应用",
+      "copyError": "复制失败"
     }
   },
   "jsonFormatter": {

@@ -40,14 +40,14 @@
     },
     {
       "id": "color-picker",
-      "name": "颜色选择器",
-      "description": "颜色选择和转换工具，支持 HEX、RGB、HSL",
+      "name": "科研颜色选择器",
+      "description": "专为科研论文设计的颜色选择器，提供Nature/Science等期刊配色、色盲友好方案、色彩和谐与代码导出",
       "icon": "🎨",
       "path": "tools/color-picker/index.html",
       "tags": [
         "颜色",
-        "设计",
-        "工具"
+        "科研",
+        "设计"
       ],
       "date": "2026-03-05"
     },

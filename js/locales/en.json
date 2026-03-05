@@ -105,8 +105,8 @@
     }
   },
   "colorPicker": {
-    "title": "🎨 Color Picker",
-    "subtitle": "Color selection and conversion tool, supports HEX, RGB, HSL conversion and color harmony generation",
+    "title": "🎨 Scientific Color Picker",
+    "subtitle": "Color picker designed for scientific papers and academic figures, with journal palettes and colorblind-friendly schemes",
     "nativePicker": "Click to select color",
     "buttons": {
       "random": "Random Color",
@@ -117,30 +117,72 @@
     "labels": {
       "hex": "HEX",
       "rgb": "RGB",
-      "hsl": "HSL"
+      "hsl": "HSL",
+      "cmyk": "CMYK"
     },
     "harmonies": {
       "title": "Color Harmonies",
+      "showAll": "Show All",
+      "showAllDesc": "View all color harmony schemes",
       "complementary": "Complementary",
+      "complementaryDesc": "Colors opposite on the color wheel, strong contrast for emphasis",
       "triadic": "Triadic",
-      "analogous": "Analogous"
+      "triadicDesc": "Three evenly spaced colors on the wheel, rich yet balanced",
+      "splitComplementary": "Split Complementary",
+      "splitComplementaryDesc": "One color plus the two adjacent to its complement, strong but softer contrast",
+      "tetradic": "Tetradic",
+      "tetradicDesc": "Two complementary pairs, rich colors for complex charts",
+      "analogous": "Analogous",
+      "analogousDesc": "Adjacent colors on the wheel, harmonious and unified for gradients",
+      "monochromatic": "Monochromatic",
+      "monochromaticDesc": "Different lightness values of the same hue, elegant and layered"
     },
     "savedColors": {
       "title": "Saved Colors",
       "empty": "No saved colors"
     },
+    "palettes": {
+      "title": "Scientific Palettes",
+      "tabs": {
+        "journal": "Journal Colors",
+        "colorblind": "Colorblind Safe",
+        "sequential": "Sequential",
+        "diverging": "Diverging"
+      },
+      "nature": "Nature",
+      "science": "Science",
+      "cell": "Cell",
+      "lancet": "Lancet",
+      "okabeIto": "Okabe-Ito",
+      "tolVibrant": "Tol Vibrant",
+      "tolMuted": "Tol Muted",
+      "wong": "Wong",
+      "viridis": "Viridis",
+      "plasma": "Plasma",
+      "inferno": "Inferno",
+      "magma": "Magma",
+      "blues": "Blues",
+      "greens": "Greens",
+      "rdbu": "Red-Blue",
+      "spectral": "Spectral",
+      "piyg": "Pink-Green",
+      "brbg": "Brown-Teal"
+    },
+    "export": {
+      "title": "Export Palette"
+    },
     "tips": {
-      "usage": {
-        "title": "💡 Tips",
-        "content": "Click colors in harmonies to quickly apply them, supports HEX, RGB, HSL format conversion"
+      "journal": {
+        "title": "📚 Journal Palettes",
+        "content": "Built-in color schemes from top journals like Nature, Science, and Cell for professional figures"
       },
-      "harmony": {
-        "title": "🎨 Color Harmonies",
-        "content": "Complementary, triadic, analogous schemes to help you create beautiful color palettes quickly"
+      "colorblind": {
+        "title": "♿ Colorblind Friendly",
+        "content": "Provides colorblind-safe palettes like Okabe-Ito to ensure accessibility for all readers"
       },
-      "storage": {
-        "title": "💾 Local Storage",
-        "content": "Saved colors are stored locally in your browser for later use and can be cleared anytime"
+      "export": {
+        "title": "💻 Code Export",
+        "content": "One-click export to Matplotlib, LaTeX, R code for direct use in your research"
       }
     },
     "toast": {
@@ -148,7 +190,11 @@
       "colorSaved": "Color saved",
       "colorExists": "Color already exists",
       "copied": "Copied",
-      "savedCleared": "Saved colors cleared"
+      "savedCleared": "Saved colors cleared",
+      "paletteSelected": "Palette selected",
+      "colorFromPalette": "Color from palette",
+      "colorApplied": "Color applied",
+      "copyError": "Copy failed"
     }
   },
   "jsonFormatter": {
