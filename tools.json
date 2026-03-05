@@ -1,0 +1,64 @@
+{
+  "tools": [
+    {
+      "id": "timestamp-converter",
+      "name": "时间戳转换器",
+      "description": "Unix 时间戳与日期时间相互转换",
+      "icon": "⏰",
+      "path": "tools/timestamp-converter/index.html",
+      "tags": [
+        "工具",
+        "计算"
+      ],
+      "date": "2026-03-05"
+    },
+    {
+      "id": "color-picker",
+      "name": "颜色选择器",
+      "description": "颜色选择和转换工具，支持 HEX、RGB、HSL",
+      "icon": "🎨",
+      "path": "tools/color-picker/index.html",
+      "tags": [
+        "颜色",
+        "设计",
+        "工具"
+      ],
+      "date": "2026-03-05"
+    },
+    {
+      "id": "base64-tool",
+      "name": "Base64 编解码",
+      "description": "Base64 编码和解码工具，支持文本转换",
+      "icon": "🔐",
+      "path": "tools/base64-tool/index.html",
+      "tags": [
+        "编码",
+        "解码",
+        "Base64"
+      ],
+      "date": "2026-03-05"
+    },
+    {
+      "id": "json-formatter",
+      "name": "JSON 格式化",
+      "description": "JSON 格式化、美化和压缩工具",
+      "icon": "📋",
+      "path": "tools/json-formatter/index.html",
+      "tags": [
+        "JSON",
+        "格式化",
+        "工具"
+      ],
+      "date": "2026-03-05"
+    },
+    {
+      "id": "remove-background",
+      "name": "背景去除工具",
+      "description": "智能图片背景去除工具，支持白色/纯色背景去除，本地处理保护隐私",
+      "icon": "🖼️",
+      "path": "tools/remove-background/index.html",
+      "tags": ["图片", "设计", "工具"],
+      "date": "2026-03-05"
+    }
+  ]
+}

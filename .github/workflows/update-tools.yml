@@ -1,0 +1,106 @@
+name: Auto Update Tools List
+
+on:
+  push:
+    branches: [main, master]
+    paths:
+      - 'tools/**'
+      - '.github/workflows/update-tools.yml'
+
+jobs:
+  update-tools:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+    
+    - name: Scan tools directory and update tools.json
+      run: |
+        node << 'EOF'
+        const fs = require('fs');
+        const path = require('path');
+
+        const toolsDir = './tools';
+        const toolsJsonPath = './tools.json';
+
+        // 读取现有的 tools.json 以保留已配置的信息
+        let existingTools = {};
+        try {
+          const existing = JSON.parse(fs.readFileSync(toolsJsonPath, 'utf8'));
+          existing.tools.forEach(tool => {
+            existingTools[tool.id] = tool;
+          });
+        } catch (e) {
+          console.log('No existing tools.json found, creating new one');
+        }
+
+        // 扫描 tools 目录
+        const tools = [];
+        const entries = fs.readdirSync(toolsDir, { withFileTypes: true });
+        
+        for (const entry of entries) {
+          if (entry.isDirectory()) {
+            const toolId = entry.name;
+            const indexPath = path.join(toolsDir, toolId, 'index.html');
+            
+            // 检查是否存在 index.html
+            if (fs.existsSync(indexPath)) {
+              const html = fs.readFileSync(indexPath, 'utf8');
+              
+              // 尝试从 HTML 中提取信息
+              const titleMatch = html.match(/<title>(.+?)<\/title>/);
+              const h1Match = html.match(/<h1[^>]*>(.+?)<\/h1>/);
+              const descMatch = html.match(/<p[^>]*>(.+?)<\/p>/);
+              
+              // 如果已存在配置，优先使用现有配置
+              if (existingTools[toolId]) {
+                tools.push(existingTools[toolId]);
+                console.log(`✓ Preserved config for: ${toolId}`);
+              } else {
+                // 创建新配置
+                const tool = {
+                  id: toolId,
+                  name: titleMatch ? titleMatch[1].replace(/[🔧🎨📋🔐🧰]|工具$/g, '').trim() : toolId,
+                  description: descMatch ? descMatch[1].replace(/<[^>]+>/g, '').trim() : '',
+                  icon: '📦',
+                  path: `tools/${toolId}/index.html`,
+                  tags: ['工具'],
+                  date: new Date().toISOString().split('T')[0]
+                };
+                tools.push(tool);
+                console.log(`✓ Discovered new tool: ${toolId}`);
+              }
+            }
+          }
+        }
+
+        // 按名称排序
+        tools.sort((a, b) => a.name.localeCompare(b.name, 'zh-CN'));
+
+        // 写入 tools.json
+        const output = { tools };
+        fs.writeFileSync(toolsJsonPath, JSON.stringify(output, null, 2) + '\n');
+        
+        console.log(`\n✓ Updated tools.json with ${tools.length} tools`);
+        EOF
+    
+    - name: Check for changes
+      id: git-check
+      run: |
+        git diff --exit-code tools.json || echo "changes=true" >> $GITHUB_OUTPUT
+    
+    - name: Commit and push changes
+      if: steps.git-check.outputs.changes == 'true'
+      run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        git add tools.json
+        git commit -m "🤖 Auto-update tools.json"
+        git push

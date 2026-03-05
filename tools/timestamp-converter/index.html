@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>时间戳转换器</title>
+    <link rel="stylesheet" href="../../css/style.css">
+    <style>
+        .tool-page {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px 24px;
+        }
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            color: var(--primary-color);
+            text-decoration: none;
+            font-size: 0.9375rem;
+            margin-bottom: 24px;
+        }
+        .tool-header-detail h1 {
+            font-size: 1.75rem;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .tool-header-detail p {
+            color: var(--text-secondary);
+        }
+        .tool-content {
+            background: var(--bg-card);
+            border-radius: var(--border-radius-lg);
+            padding: 32px;
+            border: 1px solid var(--border-color);
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-group label {
+            display: block;
+            font-weight: 500;
+            margin-bottom: 8px;
+        }
+        .form-control {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid var(--border-color);
+            border-radius: var(--border-radius-md);
+            font-size: 1rem;
+            outline: none;
+        }
+        .form-control:focus {
+            border-color: var(--primary-color);
+        }
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: var(--border-radius-md);
+            font-size: 0.9375rem;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        .btn-primary {
+            background: var(--primary-color);
+            color: white;
+        }
+        .btn-secondary {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+        }
+        .result-box {
+            background: var(--bg-secondary);
+            padding: 16px;
+            border-radius: var(--border-radius-md);
+            margin-top: 12px;
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body>
+    <div class="tool-page">
+        <a href="../../index.html" class="back-link">← 返回工具箱</a>
+        
+        <div class="tool-header-detail">
+            <h1>⏰ 时间戳转换器</h1>
+            <p>Unix 时间戳与日期时间相互转换</p>
+        </div>
+        
+        <div class="tool-content">
+            <div class="form-group">
+                <label>Unix 时间戳 (秒)</label>
+                <input type="number" id="timestamp" class="form-control" placeholder="例如: 1700000000">
+                <button class="btn btn-primary" onclick="timestampToDate()" style="margin-top: 10px;">转换为日期</button>
+                <button class="btn btn-secondary" onclick="setNow()">现在</button>
+            </div>
+            
+            <div class="form-group">
+                <label>日期时间</label>
+                <input type="datetime-local" id="datetime" class="form-control">
+                <button class="btn btn-primary" onclick="dateToTimestamp()" style="margin-top: 10px;">转换为时间戳</button>
+            </div>
+            
+            <div id="result"></div>
+        </div>
+    </div>
+    
+    <script>
+        function timestampToDate() {
+            const ts = document.getElementById('timestamp').value;
+            if (!ts) return;
+            const date = new Date(ts.length > 10 ? parseInt(ts) : parseInt(ts) * 1000);
+            document.getElementById('result').innerHTML = 
+                `<div class="result-box">${date.toLocaleString('zh-CN')}</div>`;
+        }
+        
+        function dateToTimestamp() {
+            const dt = document.getElementById('datetime').value;
+            if (!dt) return;
+            const timestamp = new Date(dt).getTime();
+            document.getElementById('result').innerHTML = 
+                `<div class="result-box">秒: ${Math.floor(timestamp/1000)}<br>毫秒: ${timestamp}</div>`;
+        }
+        
+        function setNow() {
+            document.getElementById('timestamp').value = Math.floor(Date.now() / 1000);
+        }
+    </script>
+</body>
+</html>

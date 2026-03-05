@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Base64 编解码工具</title>
+    <link rel="stylesheet" href="../../css/style.css">
+    <style>
+        /* 工具页面专用样式 */
+        .tool-page {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 40px 24px;
+        }
+        
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            color: var(--primary-color);
+            text-decoration: none;
+            font-size: 0.9375rem;
+            margin-bottom: 24px;
+            transition: color var(--transition-fast);
+        }
+        
+        .back-link:hover {
+            color: var(--primary-hover);
+        }
+        
+        .tool-header-detail {
+            margin-bottom: 32px;
+        }
+        
+        .tool-header-detail h1 {
+            font-size: 1.75rem;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .tool-header-detail p {
+            color: var(--text-secondary);
+        }
+        
+        .tool-content {
+            background: var(--bg-card);
+            border-radius: var(--border-radius-lg);
+            padding: 32px;
+            border: 1px solid var(--border-color);
+        }
+        
+        .form-group {
+            margin-bottom: 24px;
+        }
+        
+        .form-group label {
+            display: block;
+            font-weight: 500;
+            margin-bottom: 8px;
+            color: var(--text-primary);
+        }
+        
+        .form-control {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid var(--border-color);
+            border-radius: var(--border-radius-md);
+            font-size: 1rem;
+            font-family: var(--font-sans);
+            transition: border-color var(--transition-fast);
+            outline: none;
+            resize: vertical;
+        }
+        
+        .form-control:focus {
+            border-color: var(--primary-color);
+        }
+        
+        textarea.form-control {
+            min-height: 150px;
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-bottom: 24px;
+        }
+        
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: var(--border-radius-md);
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all var(--transition-fast);
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .btn-primary {
+            background: var(--primary-color);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: var(--primary-hover);
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-md);
+        }
+        
+        .btn-secondary {
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+        }
+        
+        .btn-secondary:hover {
+            background: var(--border-color);
+        }
+        
+        .result-area {
+            position: relative;
+        }
+        
+        .copy-btn {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            padding: 6px 12px;
+            font-size: 0.875rem;
+        }
+        
+        .error-message {
+            color: #dc2626;
+            font-size: 0.875rem;
+            margin-top: 8px;
+        }
+        
+        .success-message {
+            color: #16a34a;
+            font-size: 0.875rem;
+            margin-top: 8px;
+        }
+        
+        @media (max-width: 600px) {
+            .tool-content {
+                padding: 20px;
+            }
+            
+            .button-group {
+                flex-direction: column;
+            }
+            
+            .btn {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="tool-page">
+        <a href="../../index.html" class="back-link">← 返回工具箱</a>
+        
+        <div class="tool-header-detail">
+            <h1>🔐 Base64 编解码</h1>
+            <p>Base64 编码和解码工具，支持文本和文件转换</p>
+        </div>
+        
+        <div class="tool-content">
+            <div class="form-group">
+                <label for="inputText">输入内容</label>
+                <textarea id="inputText" class="form-control" placeholder="在此输入要编码或解码的内容..."></textarea>
+            </div>
+            
+            <div class="button-group">
+                <button class="btn btn-primary" onclick="encodeBase64()">🔒 编码</button>
+                <button class="btn btn-primary" onclick="decodeBase64()">🔓 解码</button>
+                <button class="btn btn-secondary" onclick="clearAll()">清空</button>
+                <button class="btn btn-secondary" onclick="swapContent()">交换内容</button>
+            </div>
+            
+            <div class="form-group result-area">
+                <label for="outputText">结果</label>
+                <textarea id="outputText" class="form-control" placeholder="结果将显示在这里..." readonly></textarea>
+                <button class="btn btn-secondary copy-btn" onclick="copyResult()">复制</button>
+            </div>
+            
+            <div id="message"></div>
+        </div>
+    </div>
+    
+    <script>
+        function encodeBase64() {
+            const input = document.getElementById('inputText').value;
+            const output = document.getElementById('outputText');
+            const message = document.getElementById('message');
+            
+            try {
+                if (!input) {
+                    showMessage('请输入要编码的内容', 'error');
+                    return;
+                }
+                output.value = btoa(unescape(encodeURIComponent(input)));
+                showMessage('编码成功', 'success');
+            } catch (e) {
+                showMessage('编码失败: ' + e.message, 'error');
+            }
+        }
+        
+        function decodeBase64() {
+            const input = document.getElementById('inputText').value;
+            const output = document.getElementById('outputText');
+            const message = document.getElementById('message');
+            
+            try {
+                if (!input) {
+                    showMessage('请输入要解码的内容', 'error');
+                    return;
+                }
+                output.value = decodeURIComponent(escape(atob(input)));
+                showMessage('解码成功', 'success');
+            } catch (e) {
+                showMessage('解码失败: 无效的 Base64 字符串', 'error');
+            }
+        }
+        
+        function clearAll() {
+            document.getElementById('inputText').value = '';
+            document.getElementById('outputText').value = '';
+            document.getElementById('message').innerHTML = '';
+        }
+        
+        function swapContent() {
+            const input = document.getElementById('inputText');
+            const output = document.getElementById('outputText');
+            const temp = input.value;
+            input.value = output.value;
+            output.value = temp;
+        }
+        
+        async function copyResult() {
+            const output = document.getElementById('outputText');
+            const message = document.getElementById('message');
+            
+            if (!output.value) {
+                showMessage('没有可复制的内容', 'error');
+                return;
+            }
+            
+            try {
+                await navigator.clipboard.writeText(output.value);
+                showMessage('已复制到剪贴板', 'success');
+            } catch (e) {
+                // 降级方案
+                output.select();
+                document.execCommand('copy');
+                showMessage('已复制到剪贴板', 'success');
+            }
+        }
+        
+        function showMessage(text, type) {
+            const message = document.getElementById('message');
+            message.innerHTML = `<div class="${type === 'error' ? 'error-message' : 'success-message'}">${text}</div>`;
+            setTimeout(() => {
+                message.innerHTML = '';
+            }, 3000);
+        }
+    </script>
+</body>
+</html>

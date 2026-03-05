@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JSON 格式化工具</title>
+    <link rel="stylesheet" href="../../css/style.css">
+    <style>
+        .tool-page {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 40px 24px;
+        }
+        
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            color: var(--primary-color);
+            text-decoration: none;
+            font-size: 0.9375rem;
+            margin-bottom: 24px;
+            transition: color var(--transition-fast);
+        }
+        
+        .back-link:hover {
+            color: var(--primary-hover);
+        }
+        
+        .tool-header-detail {
+            margin-bottom: 32px;
+        }
+        
+        .tool-header-detail h1 {
+            font-size: 1.75rem;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .tool-header-detail p {
+            color: var(--text-secondary);
+        }
+        
+        .tool-content {
+            background: var(--bg-card);
+            border-radius: var(--border-radius-lg);
+            padding: 32px;
+            border: 1px solid var(--border-color);
+        }
+        
+        .split-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+        }
+        
+        .form-group {
+            margin-bottom: 16px;
+        }
+        
+        .form-group label {
+            display: block;
+            font-weight: 500;
+            margin-bottom: 8px;
+            color: var(--text-primary);
+        }
+        
+        .form-control {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid var(--border-color);
+            border-radius: var(--border-radius-md);
+            font-size: 0.9375rem;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            transition: border-color var(--transition-fast);
+            outline: none;
+            resize: vertical;
+        }
+        
+        .form-control:focus {
+            border-color: var(--primary-color);
+        }
+        
+        textarea.form-control {
+            min-height: 400px;
+            line-height: 1.6;
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-bottom: 24px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: var(--border-radius-md);
+            font-size: 0.9375rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all var(--transition-fast);
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .btn-primary {
+            background: var(--primary-color);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: var(--primary-hover);
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-md);
+        }
+        
+        .btn-secondary {
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+        }
+        
+        .btn-secondary:hover {
+            background: var(--border-color);
+        }
+        
+        .error-message {
+            color: #dc2626;
+            font-size: 0.875rem;
+            margin-top: 8px;
+            padding: 12px;
+            background: #fef2f2;
+            border-radius: var(--border-radius-sm);
+            border-left: 3px solid #dc2626;
+        }
+        
+        .success-message {
+            color: #16a34a;
+            font-size: 0.875rem;
+            margin-top: 8px;
+            padding: 12px;
+            background: #f0fdf4;
+            border-radius: var(--border-radius-sm);
+            border-left: 3px solid #16a34a;
+        }
+        
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        
+        .panel-actions {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .btn-small {
+            padding: 4px 12px;
+            font-size: 0.8125rem;
+        }
+        
+        .stats-bar {
+            display: flex;
+            gap: 24px;
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            margin-top: 16px;
+            padding-top: 16px;
+            border-top: 1px solid var(--border-color);
+        }
+        
+        .stat-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        @media (max-width: 768px) {
+            .split-layout {
+                grid-template-columns: 1fr;
+            }
+            
+            textarea.form-control {
+                min-height: 200px;
+            }
+            
+            .tool-content {
+                padding: 20px;
+            }
+            
+            .button-group {
+                flex-direction: column;
+            }
+            
+            .btn {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="tool-page">
+        <a href="../../index.html" class="back-link">← 返回工具箱</a>
+        
+        <div class="tool-header-detail">
+            <h1>📋 JSON 格式化</h1>
+            <p>JSON 格式化、美化和压缩工具，支持语法校验</p>
+        </div>
+        
+        <div class="tool-content">
+            <div class="button-group">
+                <button class="btn btn-primary" onclick="formatJSON(2)">✨ 格式化</button>
+                <button class="btn btn-primary" onclick="formatJSON(4)">✨ 4空格缩进</button>
+                <button class="btn btn-primary" onclick="minifyJSON()">🗜️ 压缩</button>
+                <button class="btn btn-secondary" onclick="validateJSON()">✓ 校验</button>
+                <button class="btn btn-secondary" onclick="clearAll()">清空</button>
+                <button class="btn btn-secondary" onclick="loadExample()">加载示例</button>
+            </div>
+            
+            <div class="split-layout">
+                <div class="input-panel">
+                    <div class="panel-header">
+                        <label for="inputJson">输入 JSON</label>
+                        <div class="panel-actions">
+                            <button class="btn btn-secondary btn-small" onclick="copyInput()">复制</button>
+                            <button class="btn btn-secondary btn-small" onclick="pasteInput()">粘贴</button>
+                        </div>
+                    </div>
+                    <textarea id="inputJson" class="form-control" placeholder='{"key": "value", "number": 123}'></textarea>
+                </div>
+                
+                <div class="output-panel">
+                    <div class="panel-header">
+                        <label for="outputJson">输出结果</label>
+                        <div class="panel-actions">
+                            <button class="btn btn-secondary btn-small" onclick="copyOutput()">复制</button>
+                            <button class="btn btn-secondary btn-small" onclick="downloadJSON()">下载</button>
+                        </div>
+                    </div>
+                    <textarea id="outputJson" class="form-control" placeholder="格式化后的结果将显示在这里..." readonly></textarea>
+                </div>
+            </div>
+            
+            <div id="message"></div>
+            
+            <div class="stats-bar" id="statsBar" style="display: none;">
+                <div class="stat-item">📊 字符数: <span id="charCount">0</span></div>
+                <div class="stat-item">📏 大小: <span id="byteSize">0</span> B</div>
+                <div class="stat-item">🔤 键数: <span id="keyCount">0</span></div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        function formatJSON(spaces) {
+            const input = document.getElementById('inputJson').value;
+            const output = document.getElementById('outputJson');
+            
+            try {
+                if (!input.trim()) {
+                    showMessage('请输入 JSON 内容', 'error');
+                    return;
+                }
+                
+                const obj = JSON.parse(input);
+                output.value = JSON.stringify(obj, null, spaces);
+                updateStats(output.value);
+                showMessage('格式化成功', 'success');
+            } catch (e) {
+                showMessage('JSON 解析错误: ' + e.message, 'error');
+            }
+        }
+        
+        function minifyJSON() {
+            const input = document.getElementById('inputJson').value;
+            const output = document.getElementById('outputJson');
+            
+            try {
+                if (!input.trim()) {
+                    showMessage('请输入 JSON 内容', 'error');
+                    return;
+                }
+                
+                const obj = JSON.parse(input);
+                output.value = JSON.stringify(obj);
+                updateStats(output.value);
+                showMessage('压缩成功', 'success');
+            } catch (e) {
+                showMessage('JSON 解析错误: ' + e.message, 'error');
+            }
+        }
+        
+        function validateJSON() {
+            const input = document.getElementById('inputJson').value;
+            
+            try {
+                if (!input.trim()) {
+                    showMessage('请输入 JSON 内容', 'error');
+                    return;
+                }
+                
+                JSON.parse(input);
+                showMessage('✓ JSON 格式正确', 'success');
+            } catch (e) {
+                showMessage('✗ JSON 解析错误: ' + e.message, 'error');
+            }
+        }
+        
+        function clearAll() {
+            document.getElementById('inputJson').value = '';
+            document.getElementById('outputJson').value = '';
+            document.getElementById('message').innerHTML = '';
+            document.getElementById('statsBar').style.display = 'none';
+        }
+        
+        function loadExample() {
+            const example = {
+                "name": "张三",
+                "age": 28,
+                "email": "zhangsan@example.com",
+                "address": {
+                    "city": "北京",
+                    "zipcode": "100000"
+                },
+                "hobbies": ["阅读", "音乐", "编程"],
+                "isActive": true
+            };
+            document.getElementById('inputJson').value = JSON.stringify(example, null, 2);
+            showMessage('已加载示例数据', 'success');
+        }
+        
+        async function copyInput() {
+            const input = document.getElementById('inputJson');
+            if (!input.value) {
+                showMessage('没有可复制的内容', 'error');
+                return;
+            }
+            await copyToClipboard(input.value);
+        }
+        
+        async function copyOutput() {
+            const output = document.getElementById('outputJson');
+            if (!output.value) {
+                showMessage('没有可复制的内容', 'error');
+                return;
+            }
+            await copyToClipboard(output.value);
+        }
+        
+        async function pasteInput() {
+            try {
+                const text = await navigator.clipboard.readText();
+                document.getElementById('inputJson').value = text;
+                showMessage('已粘贴', 'success');
+            } catch (e) {
+                showMessage('无法访问剪贴板', 'error');
+            }
+        }
+        
+        async function copyToClipboard(text) {
+            try {
+                await navigator.clipboard.writeText(text);
+                showMessage('已复制到剪贴板', 'success');
+            } catch (e) {
+                showMessage('复制失败', 'error');
+            }
+        }
+        
+        function downloadJSON() {
+            const output = document.getElementById('outputJson').value;
+            if (!output) {
+                showMessage('没有可下载的内容', 'error');
+                return;
+            }
+            
+            const blob = new Blob([output], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'formatted.json';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            showMessage('文件已下载', 'success');
+        }
+        
+        function updateStats(json) {
+            document.getElementById('charCount').textContent = json.length;
+            document.getElementById('byteSize').textContent = new Blob([json]).size;
+            
+            try {
+                const obj = JSON.parse(json);
+                const keys = countKeys(obj);
+                document.getElementById('keyCount').textContent = keys;
+            } catch (e) {
+                document.getElementById('keyCount').textContent = 0;
+            }
+            
+            document.getElementById('statsBar').style.display = 'flex';
+        }
+        
+        function countKeys(obj) {
+            let count = 0;
+            for (const key in obj) {
+                count++;
+                if (typeof obj[key] === 'object' && obj[key] !== null) {
+                    count += countKeys(obj[key]);
+                }
+            }
+            return count;
+        }
+        
+        function showMessage(text, type) {
+            const message = document.getElementById('message');
+            message.innerHTML = `<div class="${type === 'error' ? 'error-message' : 'success-message'}">${escapeHtml(text)}</div>`;
+            setTimeout(() => {
+                message.innerHTML = '';
+            }, 5000);
+        }
+        
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+    </script>
+</body>
+</html>
