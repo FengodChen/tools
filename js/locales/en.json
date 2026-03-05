@@ -338,6 +338,9 @@
     "linuxCmdTitle": "Linux Command (requires sudo)",
     "macosCmdTitle": "macOS Command (requires sudo)",
     "windowsCmdTitle": "Windows Command (requires admin)",
+    "hostsContent": "Hosts File Content",
+    "hostsContentSubtitle": "(Copy and paste directly to hosts file)",
+    "hostsContentTitle": "Copy and Use Directly",
     "tips": {
       "usage": {
         "title": "Usage",
@@ -353,7 +356,9 @@
       "partialSuccess": "Some IPs fetched successfully",
       "allFailed": "Failed to fetch IPs, please retry later",
       "copied": "Command copied to clipboard",
-      "noCommand": "No command to copy"
+      "noCommand": "No command to copy",
+      "noContent": "No content to copy",
+      "hostsCopied": "Hosts content copied to clipboard"
     }
   }
 }

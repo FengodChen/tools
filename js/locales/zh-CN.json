@@ -338,6 +338,9 @@
     "linuxCmdTitle": "Linux 命令 (需要 sudo 权限)",
     "macosCmdTitle": "macOS 命令 (需要 sudo 权限)",
     "windowsCmdTitle": "Windows 命令 (需要管理员权限)",
+    "hostsContent": "Hosts 文件内容",
+    "hostsContentSubtitle": "(可直接复制粘贴到 hosts 文件)",
+    "hostsContentTitle": "直接复制使用",
     "tips": {
       "usage": {
         "title": "使用说明",
@@ -353,7 +356,9 @@
       "partialSuccess": "部分 IP 获取成功",
       "allFailed": "获取失败，请稍后重试",
       "copied": "命令已复制到剪贴板",
-      "noCommand": "没有可复制的命令"
+      "noCommand": "没有可复制的命令",
+      "noContent": "没有可复制的内容",
+      "hostsCopied": "Hosts 内容已复制到剪贴板"
     }
   }
 }
