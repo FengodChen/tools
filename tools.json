@@ -52,6 +52,19 @@
         "WASM"
       ],
       "date": "2026-03-06"
+    },
+    {
+      "id": "image-editor",
+      "name": "图片编辑器",
+      "description": "简单易用的在线图片编辑工具，支持裁剪、旋转、翻转、调整大小等功能",
+      "icon": "🖼️",
+      "path": "tools/image-editor/index.html",
+      "tags": [
+        "图片",
+        "设计",
+        "工具"
+      ],
+      "date": "2026-03-06"
     }
   ]
 }

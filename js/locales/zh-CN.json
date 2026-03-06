@@ -437,5 +437,89 @@
       "paused": "游戏已暂停",
       "resumed": "游戏继续"
     }
+  },
+  "imageEditor": {
+    "title": "🖼️ 图片编辑器",
+    "subtitle": "简单易用的在线图片编辑工具，支持裁剪、旋转、翻转等功能",
+    "backToHome": "返回首页",
+    "buttons": {
+      "upload": "上传图片",
+      "download": "下载图片",
+      "copy": "复制到剪贴板",
+      "paste": "粘贴 (Ctrl+V)",
+      "reset": "重置",
+      "undo": "撤销"
+    },
+    "crop": {
+      "hint": "按住鼠标拖动选择裁剪区域"
+    },
+    "tools": {
+      "transform": {
+        "title": "变换"
+      },
+      "rotate": {
+        "left": "左旋",
+        "right": "右旋"
+      },
+      "flip": {
+        "horizontal": "水平翻转",
+        "vertical": "垂直翻转"
+      },
+      "crop": {
+        "title": "裁剪",
+        "start": "开始裁剪",
+        "apply": "应用",
+        "cancel": "取消",
+        "freeRatio": "自由"
+      },
+      "resize": {
+        "title": "调整大小",
+        "width": "宽度",
+        "height": "高度",
+        "keepRatio": "保持比例",
+        "apply": "应用调整"
+      }
+    },
+    "canvas": {
+      "title": "画布",
+      "placeholder": "点击上传或拖拽图片到此处"
+    },
+    "status": {
+      "waiting": "等待上传图片...",
+      "ready": "准备就绪"
+    },
+    "tips": {
+      "crop": {
+        "title": "✂️ 自由裁剪",
+        "content": "支持自由裁剪和固定比例裁剪，拖拽调整裁剪区域"
+      },
+      "transform": {
+        "title": "🔄 快速变换",
+        "content": "支持左旋、右旋、水平翻转、垂直翻转等多种变换操作"
+      },
+      "privacy": {
+        "title": "✨ 隐私保护",
+        "content": "所有处理在本地浏览器完成，图片不会上传到服务器"
+      }
+    },
+    "toast": {
+      "message": "提示信息",
+      "imageLoaded": "图片加载成功",
+      "rotated": "已旋转 {{degrees}}°",
+      "flipped": "已翻转",
+      "cropped": "裁剪成功",
+      "cropHint": "点击裁剪按钮后，在图片上按住鼠标拖动选择裁剪区域",
+      "cropTooSmall": "裁剪区域太小，请重新选择",
+      "resized": "调整大小成功",
+      "invalidSize": "尺寸无效",
+      "reset": "已重置",
+      "undone": "已撤销",
+      "downloadStarted": "下载已开始",
+      "pasted": "已从剪贴板粘贴图片",
+      "copied": "已复制到剪贴板",
+      "copyError": "复制失败，请重试",
+      "pasteError": "粘贴失败，请重试",
+      "noImageInClipboard": "剪贴板中没有图片"
+    }
   }
 }

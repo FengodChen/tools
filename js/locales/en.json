@@ -437,5 +437,89 @@
       "paused": "Game paused",
       "resumed": "Game resumed"
     }
+  },
+  "imageEditor": {
+    "title": "🖼️ Image Editor",
+    "subtitle": "Easy-to-use online image editor with crop, rotate, flip and more",
+    "backToHome": "Back to Home",
+    "buttons": {
+      "upload": "Upload Image",
+      "download": "Download Image",
+      "copy": "Copy to Clipboard",
+      "paste": "Paste (Ctrl+V)",
+      "reset": "Reset",
+      "undo": "Undo"
+    },
+    "crop": {
+      "hint": "Hold and drag on image to select crop area"
+    },
+    "tools": {
+      "transform": {
+        "title": "Transform"
+      },
+      "rotate": {
+        "left": "Rotate Left",
+        "right": "Rotate Right"
+      },
+      "flip": {
+        "horizontal": "Flip Horizontal",
+        "vertical": "Flip Vertical"
+      },
+      "crop": {
+        "title": "Crop",
+        "start": "Start Crop",
+        "apply": "Apply",
+        "cancel": "Cancel",
+        "freeRatio": "Free"
+      },
+      "resize": {
+        "title": "Resize",
+        "width": "Width",
+        "height": "Height",
+        "keepRatio": "Keep Ratio",
+        "apply": "Apply Resize"
+      }
+    },
+    "canvas": {
+      "title": "Canvas",
+      "placeholder": "Click to upload or drag image here"
+    },
+    "status": {
+      "waiting": "Waiting for image upload...",
+      "ready": "Ready"
+    },
+    "tips": {
+      "crop": {
+        "title": "✂️ Free Crop",
+        "content": "Supports free crop and fixed ratio crop, drag to adjust crop area"
+      },
+      "transform": {
+        "title": "🔄 Quick Transform",
+        "content": "Supports rotate left/right, flip horizontal/vertical and more"
+      },
+      "privacy": {
+        "title": "✨ Privacy Protection",
+        "content": "All processing is done locally in your browser, images never uploaded"
+      }
+    },
+    "toast": {
+      "message": "Notification",
+      "imageLoaded": "Image loaded successfully",
+      "rotated": "Rotated {{degrees}}°",
+      "flipped": "Flipped",
+      "cropped": "Crop applied",
+      "cropHint": "Click crop button, then hold and drag on image to select area",
+      "cropTooSmall": "Crop area too small, please select again",
+      "resized": "Resize applied",
+      "invalidSize": "Invalid size",
+      "reset": "Reset",
+      "undone": "Undone",
+      "downloadStarted": "Download started",
+      "pasted": "Image pasted from clipboard",
+      "copied": "Copied to clipboard",
+      "copyError": "Copy failed, please try again",
+      "pasteError": "Paste failed, please try again",
+      "noImageInClipboard": "No image in clipboard"
+    }
   }
 }
