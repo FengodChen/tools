@@ -62,6 +62,10 @@
     "github-hosts": {
       "name": "GitHub Hosts",
       "description": "Automatically get GitHub latest IP addresses, one-click generate hosts modification commands for Linux/macOS/Windows"
+    },
+    "video-editor": {
+      "name": "Video Editor",
+      "description": "Online video editor with cutting, format conversion, multi-track audio, local processing"
     }
   },
   "base64": {
@@ -438,6 +442,166 @@
       "resumed": "Game resumed"
     }
   },
+  "pythonIde": {
+    "title": "🐍 Python IDE",
+    "subtitle": "Online Python IDE based on Pyodide, supports code editing, Notebook mode, and package management",
+    "loading": "Loading Pyodide...",
+    "loadingEditor": "Initializing editor...",
+    "ready": "Ready",
+    "error": "Load Failed",
+    "modes": {
+      "ide": "IDE",
+      "notebook": "Notebook"
+    },
+    "buttons": {
+      "run": "Run",
+      "clear": "Clear Output",
+      "packages": "Packages",
+      "save": "Save Project",
+      "load": "Load",
+      "install": "Install",
+      "refresh": "Refresh",
+      "export": "Export",
+      "exportTitle": "Export as Python ZIP",
+      "fullscreen": "Fullscreen",
+      "cancel": "Cancel",
+      "confirm": "Confirm",
+      "savePlot": "Save"
+    },
+    "editor": {
+      "hint": "Press Ctrl+Enter to run code"
+    },
+    "output": {
+      "title": "Output",
+      "console": "Console",
+      "plots": "Plots",
+      "hide": "Hide output",
+      "show": "Show output",
+      "clear": "Clear"
+    },
+    "notebook": {
+      "addCode": "Code Cell",
+      "addMarkdown": "Markdown",
+      "codePlaceholder": "Enter Python code...",
+      "markdownPlaceholder": "Enter Markdown..."
+    },
+    "fileExplorer": {
+      "title": "Files",
+      "newFile": "New File",
+      "newFolder": "New Folder",
+      "upload": "Upload Files",
+      "prompt": "Enter file name",
+      "folderPrompt": "Enter folder name",
+      "fileExists": "File/Folder already exists",
+      "folderCreated": "Folder created",
+      "confirmDelete": "Are you sure you want to delete?",
+      "dragHint": "Drag files here to upload",
+      "download": "Download",
+      "delete": "Delete",
+      "hideSidebar": "Hide sidebar",
+      "showSidebar": "Show sidebar"
+    },
+    "contextMenu": {
+      "newFile": "📄 New File",
+      "newFolder": "📁 New Folder",
+      "rename": "✏️ Rename",
+      "download": "⬇️ Download",
+      "delete": "🗑️ Delete"
+    },
+    "packages": {
+      "title": "📦 Package Manager",
+      "source": "PyPI Source",
+      "install": "Install Package",
+      "placeholder": "numpy, pandas, matplotlib...",
+      "versionPlaceholder": "Version (optional, e.g., 1.24.0)",
+      "installed": "Installed Packages",
+      "loading": "Loading...",
+      "defaultSource": "Default (pypi.org) - Recommended",
+      "tsinghuaSource": "Tsinghua University - May have browser restrictions",
+      "versionHint": "Leave empty to install latest version",
+      "corsError": "Install failed: CORS restriction, try using default PyPI source",
+      "packageNotFound": "Install failed: Package \"{{package}}\" not found, please check the name",
+      "versionError": "Install failed: Version \"{{version}}\" is not available, please check the version",
+      "corsWarning": "Tsinghua mirror may not work due to browser CORS restrictions. If installation fails, switch back to the default source"
+    },
+    "fullscreen": {
+      "enter": "Enter Fullscreen",
+      "exit": "Exit Fullscreen"
+    },
+    "editorMenu": {
+      "undo": "↩️ Undo",
+      "redo": "↪️ Redo",
+      "cut": "✂️ Cut",
+      "copy": "📋 Copy",
+      "paste": "📄 Paste",
+      "selectAll": "☑️ Select All",
+      "format": "✨ Format Code",
+      "find": "🔍 Find",
+      "replace": "🔄 Replace"
+    },
+    "tabMenu": {
+      "closeTab": "Close Tab",
+      "closeOtherTabs": "Close Others",
+      "closeTabsToRight": "Close to the Right",
+      "copyPath": "Copy Path",
+      "revealInExplorer": "Reveal in Explorer"
+    },
+    "outputMenu": {
+      "copyOutput": "📋 Copy Output",
+      "clearOutput": "🗑️ Clear Output",
+      "selectAllOutput": "☑️ Select All"
+    },
+    "emptyMenu": {
+      "newFile": "📄 New File",
+      "newFolder": "📁 New Folder",
+      "pasteFile": "📋 Paste File",
+      "toggleFullscreen": "⛶ Fullscreen"
+    },
+    "toast": {
+      "noCode": "Please enter code",
+      "noPackage": "Please enter package name",
+      "runSuccess": "Execution completed",
+      "runError": "Execution error",
+      "installSuccess": "{{package}} installed successfully",
+      "installError": "Installation failed: {{error}}",
+      "saved": "Project saved",
+      "loaded": "Project loaded",
+      "loadError": "Failed to load",
+      "fileExists": "File already exists",
+      "renamed": "Renamed successfully",
+      "pathCopied": "Path copied",
+      "revealedInExplorer": "Revealed in explorer",
+      "outputCopied": "Output copied",
+      "formatted": "Code formatted",
+      "alreadyFormatted": "Code already formatted",
+      "clipboardError": "Unable to access clipboard",
+      "noOutput": "Nothing to copy",
+      "fileCreated": "File created",
+      "fullscreenEnter": "Entered fullscreen mode",
+      "fullscreenExit": "Exited fullscreen mode",
+      "fullscreenError": "Unable to enter fullscreen mode",
+      "plotSaved": "Plot saved",
+      "fileDownloaded": "Downloaded: {{name}}",
+      "folderDownloaded": "Folder downloaded: {{name}}.zip",
+      "downloadFailed": "Download failed: {{error}}",
+      "moveToSubfolderError": "Cannot move folder into its subfolder",
+      "duplicateName": "Target location already has a file/folder with the same name",
+      "moveSuccess": "Move successful",
+      "exportSuccess": "Python project exported as ZIP (includes requirements.txt)",
+      "exportFailed": "Export failed: {{error}}",
+      "zipLoaded": "ZIP project loaded",
+      "fileSkipped": "File {{name}} already exists, skipped",
+      "fileUploaded": "File {{name}} uploaded",
+      "imageUploaded": "Image {{name}} uploaded",
+      "videoUploaded": "Video {{name}} uploaded",
+      "audioUploaded": "Audio {{name}} uploaded",
+      "fileUploadedWithSize": "File {{name}} uploaded ({{size}})",
+      "moveInDevelopment": "File move feature in development",
+      "noPackages": "No packages installed",
+      "packagesLoadFailed": "Failed to load",
+      "noCellOutput": "No output"
+    }
+  },
   "imageEditor": {
     "title": "🖼️ Image Editor",
     "subtitle": "Easy-to-use online image editor with crop, rotate, flip and more",
@@ -520,6 +684,91 @@
       "copyError": "Copy failed, please try again",
       "pasteError": "Paste failed, please try again",
       "noImageInClipboard": "No image in clipboard"
+    }
+  },
+  "videoEditor": {
+    "title": "🎬 Online Video Editor",
+    "loading": {
+      "title": "Initializing Editor...",
+      "subtitle": "First load may take some time"
+    },
+    "buttons": {
+      "upload": "Upload Video",
+      "export": "Export Video",
+      "downloadOriginal": "Download Original",
+      "setCurrent": "Set Current",
+      "preview": "Preview",
+      "apply": "Apply",
+      "clearAll": "Clear All",
+      "addAudio": "Add Audio File"
+    },
+    "upload": {
+      "hint": "Supports MP4, MOV, AVI, WebM formats"
+    },
+    "tabs": {
+      "cut": "Cut",
+      "convert": "Convert",
+      "audio": "Audio"
+    },
+    "cut": {
+      "startTime": "Start Time",
+      "endTime": "End Time",
+      "segments": "Added Segments",
+      "noSegments": "No segments yet"
+    },
+    "convert": {
+      "format": "Output Format",
+      "quality": "Video Quality",
+      "resolution": "Resolution",
+      "gifOptions": "GIF Options",
+      "fps": "Frame Rate",
+      "width": "Width (px)"
+    },
+    "quality": {
+      "high": "High Quality (Original)",
+      "medium": "Medium Quality",
+      "low": "Low Quality (Compressed)"
+    },
+    "resolution": {
+      "original": "Original Resolution"
+    },
+    "audio": {
+      "volume": "Volume Adjustment",
+      "mute": "Mute Original Video",
+      "addTrack": "Add Audio Track",
+      "trackOffset": "Track Offset (seconds)",
+      "trackVolume": "Track Volume"
+    },
+    "info": {
+      "title": "Video Info",
+      "noVideo": "No video loaded",
+      "name": "Name",
+      "size": "Size",
+      "duration": "Duration",
+      "resolution": "Resolution"
+    },
+    "empty": {
+      "title": "Drag video file here",
+      "subtitle": "Or click upload button on the left"
+    },
+    "timeline": {
+      "hint1": "Click timeline to seek",
+      "hint2": "Green=Start Red=End"
+    },
+    "processing": {
+      "title": "Processing Video...",
+      "subtitle": "Please wait, processing with FFmpeg"
+    },
+    "toast": {
+      "message": "Notification",
+      "videoLoaded": "Video loaded",
+      "invalidTime": "Start time must be less than end time",
+      "segmentAdded": "Segment added",
+      "segmentsCleared": "All segments cleared",
+      "audioAdded": "Audio added",
+      "noVideo": "Please upload a video first",
+      "exportSuccess": "Export successful",
+      "exportError": "Export failed"
     }
   }
 }

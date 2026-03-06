@@ -4,13 +4,24 @@
 提供静态文件服务和 index.html 主页
 """
 
-from flask import Flask, send_from_directory
+from flask import Flask, send_from_directory, make_response
 import os
 
 app = Flask(__name__)
 
 # 获取当前目录作为根目录
 ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
+
+
+@app.after_request
+def add_security_headers(response):
+    """
+    添加安全 headers
+    """
+    # 添加基本安全 headers，但不包括 COEP（避免 CDN 问题）
+    response.headers['X-Content-Type-Options'] = 'nosniff'
+    response.headers['X-Frame-Options'] = 'DENY'
+    return response
 
 
 @app.route('/')

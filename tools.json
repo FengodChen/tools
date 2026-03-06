@@ -1,6 +1,24 @@
 {
   "tools": [
     {
+      "id": "video-editor",
+      "name": "🎬 视频编辑器",
+      "description": "基于 FFmpeg WASM 的在线视频编辑器，支持视频剪辑、格式转换、多轨音频等功能，纯本地处理保护隐私",
+      "icon": "🎬",
+      "path": "tools/video-editor/index.html",
+      "tags": ["工具", "视频", "编辑", "FFmpeg"],
+      "date": "2026-03-06"
+    },
+    {
+      "id": "python-ide",
+      "name": "🐍 Python IDE",
+      "description": "基于 Pyodide 的在线 Python 集成开发环境，支持代码编辑、Notebook 模式、matplotlib 图表显示、pip 包管理",
+      "icon": "🐍",
+      "path": "tools/python-ide/index.html",
+      "tags": ["工具", "Python", "编程", "IDE"],
+      "date": "2026-03-06"
+    },
+    {
       "id": "github-hosts",
       "name": "GitHub Hosts",
       "description": "自动获取 GitHub 最新 IP 地址，一键生成 Linux/macOS/Windows hosts 修改命令",

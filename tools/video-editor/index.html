@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title data-i18n="videoEditor.title">🎬 在线视频编辑器</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FFmpeg WASM 0.12.x - 使用本地文件避免 CORS 问题 -->
+    <script src="./ffmpeg/ffmpeg.js"></script>
+    <script src="./ffmpeg/util.js"></script>
+    <script src="../../js/i18n.js"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="bg-slate-50 text-slate-700">
+    <!-- Language Switcher -->
+    <div class="language-switcher-container"></div>
+
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="fixed inset-0 bg-slate-900/90 z-50 flex items-center justify-center">
+        <div class="text-center text-white">
+            <div class="w-16 h-16 border-4 border-white/30 border-t-indigo-500 rounded-full animate-spin mx-auto mb-4"></div>
+            <h2 class="text-xl font-semibold mb-2" data-i18n="videoEditor.loading.title">正在初始化编辑器...</h2>
+            <p class="text-slate-300" data-i18n="videoEditor.loading.subtitle">首次加载可能需要一些时间</p>
+            <div class="mt-4 text-sm text-slate-400" id="loadingProgress">0%</div>
+        </div>
+    </div>
+
+    <!-- Main Container -->
+    <div class="min-h-screen flex flex-col">
+        <!-- Header -->
+        <header class="bg-white border-b border-slate-200 px-4 py-3 flex items-center justify-between sticky top-0 z-40">
+            <div class="flex items-center gap-4">
+                <a href="../../index.html" class="inline-flex items-center gap-2 text-slate-500 hover:text-slate-800 transition-colors">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                    </svg>
+                    <span data-i18n="back">返回首页</span>
+                </a>
+                <div class="h-6 w-px bg-slate-200"></div>
+                <h1 class="text-xl font-bold text-slate-800" data-i18n="videoEditor.title">🎬 在线视频编辑器</h1>
+            </div>
+            <div class="flex items-center gap-3">
+                <button id="exportBtn" class="btn-primary px-4 py-2 rounded-lg font-medium flex items-center gap-2 opacity-50 cursor-not-allowed" disabled>
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                    </svg>
+                    <span data-i18n="videoEditor.buttons.export">导出视频</span>
+                </button>
+            </div>
+        </header>
+
+        <!-- Workspace -->
+        <div class="flex-1 flex overflow-hidden">
+            <!-- Left Sidebar - Tools -->
+            <aside class="w-64 bg-white border-r border-slate-200 flex flex-col">
+                <!-- Upload Section -->
+                <div class="p-4 border-b border-slate-200">
+                    <input type="file" id="videoInput" accept="video/*" class="hidden">
+                    <button id="uploadBtn" class="w-full btn-secondary py-3 rounded-lg font-medium flex items-center justify-center gap-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+                        </svg>
+                        <span data-i18n="videoEditor.buttons.upload">上传视频</span>
+                    </button>
+                    <p class="text-xs text-slate-400 mt-2 text-center" data-i18n="videoEditor.upload.hint">支持 MP4, MOV, AVI, WebM 等格式</p>
+                </div>
+
+                <!-- Tools Tabs -->
+                <div class="flex border-b border-slate-200">
+                    <button class="tool-tab flex-1 py-3 text-sm font-medium text-indigo-600 border-b-2 border-indigo-600 active" data-tab="cut">
+                        <span data-i18n="videoEditor.tabs.cut">剪辑</span>
+                    </button>
+                    <button class="tool-tab flex-1 py-3 text-sm font-medium text-slate-500 hover:text-slate-700" data-tab="convert">
+                        <span data-i18n="videoEditor.tabs.convert">转换</span>
+                    </button>
+                    <button class="tool-tab flex-1 py-3 text-sm font-medium text-slate-500 hover:text-slate-700" data-tab="audio">
+                        <span data-i18n="videoEditor.tabs.audio">音频</span>
+                    </button>
+                </div>
+
+                <!-- Tool Panels -->
+                <div class="flex-1 overflow-y-auto p-4">
+                    <!-- Cut Panel -->
+                    <div id="cutPanel" class="tool-panel space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-2" data-i18n="videoEditor.cut.startTime">开始时间</label>
+                            <div class="flex items-center gap-2">
+                                <input type="text" id="startTime" value="00:00:00" class="time-input flex-1 px-3 py-2 border border-slate-300 rounded-lg text-sm font-mono">
+                                <button id="setStartBtn" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 rounded-lg text-sm font-medium transition-colors" data-i18n="videoEditor.buttons.setCurrent">
+                                    设为当前
+                                </button>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-2" data-i18n="videoEditor.cut.endTime">结束时间</label>
+                            <div class="flex items-center gap-2">
+                                <input type="text" id="endTime" value="00:00:00" class="time-input flex-1 px-3 py-2 border border-slate-300 rounded-lg text-sm font-mono">
+                                <button id="setEndBtn" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 rounded-lg text-sm font-medium transition-colors" data-i18n="videoEditor.buttons.setCurrent">
+                                    设为当前
+                                </button>
+                            </div>
+                        </div>
+                        <div class="flex gap-2">
+                            <button id="previewCutBtn" class="flex-1 btn-secondary py-2 rounded-lg text-sm font-medium" data-i18n="videoEditor.buttons.preview">
+                                预览
+                            </button>
+                            <button id="applyCutBtn" class="flex-1 btn-primary py-2 rounded-lg text-sm font-medium text-white" data-i18n="videoEditor.buttons.apply">
+                                应用
+                            </button>
+                        </div>
+                        <div class="pt-4 border-t border-slate-200">
+                            <h4 class="text-sm font-medium text-slate-700 mb-2" data-i18n="videoEditor.cut.segments">已添加的片段</h4>
+                            <div id="segmentsList" class="space-y-2 max-h-40 overflow-y-auto">
+                                <p class="text-sm text-slate-400 italic" data-i18n="videoEditor.cut.noSegments">暂无片段</p>
+                            </div>
+                            <button id="clearSegmentsBtn" class="w-full mt-2 py-2 text-sm text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors hidden" data-i18n="videoEditor.buttons.clearAll">
+                                清空所有
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Convert Panel -->
+                    <div id="convertPanel" class="tool-panel space-y-4 hidden">
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-2" data-i18n="videoEditor.convert.format">输出格式</label>
+                            <select id="outputFormat" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm">
+                                <option value="mp4">MP4 (H.264)</option>
+                                <option value="webm">WebM (VP9)</option>
+                                <option value="mov">MOV (QuickTime)</option>
+                                <option value="avi">AVI</option>
+                                <option value="gif">GIF 动画</option>
+                                <option value="mp3">MP3 音频</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-2" data-i18n="videoEditor.convert.quality">视频质量</label>
+                            <select id="videoQuality" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm">
+                                <option value="high" data-i18n="videoEditor.quality.high">高质量 (原画)</option>
+                                <option value="medium" data-i18n="videoEditor.quality.medium">中等质量</option>
+                                <option value="low" data-i18n="videoEditor.quality.low">低质量 (压缩)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-2" data-i18n="videoEditor.convert.resolution">分辨率</label>
+                            <select id="outputResolution" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm">
+                                <option value="original" data-i18n="videoEditor.resolution.original">原始分辨率</option>
+                                <option value="1920x1080">1080p (FHD)</option>
+                                <option value="1280x720">720p (HD)</option>
+                                <option value="854x480">480p</option>
+                                <option value="640x360">360p</option>
+                            </select>
+                        </div>
+                        <div id="gifOptions" class="hidden space-y-3 pt-3 border-t border-slate-200">
+                            <label class="block text-sm font-medium text-slate-700" data-i18n="videoEditor.convert.gifOptions">GIF 选项</label>
+                            <div>
+                                <span class="text-xs text-slate-500" data-i18n="videoEditor.convert.fps">帧率</span>
+                                <input type="range" id="gifFps" min="5" max="30" value="15" class="w-full mt-1">
+                                <div class="flex justify-between text-xs text-slate-400">
+                                    <span>5fps</span>
+                                    <span id="gifFpsValue">15fps</span>
+                                    <span>30fps</span>
+                                </div>
+                            </div>
+                            <div>
+                                <span class="text-xs text-slate-500" data-i18n="videoEditor.convert.width">宽度 (px)</span>
+                                <input type="number" id="gifWidth" value="480" class="w-full mt-1 px-3 py-2 border border-slate-300 rounded-lg text-sm">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Audio Panel -->
+                    <div id="audioPanel" class="tool-panel space-y-4 hidden">
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-2" data-i18n="videoEditor.audio.volume">音量调整</label>
+                            <div class="flex items-center gap-3">
+                                <svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"></path>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2"></path>
+                                </svg>
+                                <input type="range" id="volumeSlider" min="0" max="200" value="100" class="flex-1">
+                                <span id="volumeValue" class="text-sm font-mono w-12 text-right">100%</span>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <input type="checkbox" id="muteAudio" class="w-4 h-4 text-indigo-600 rounded">
+                            <label for="muteAudio" class="text-sm text-slate-700" data-i18n="videoEditor.audio.mute">静音原视频</label>
+                        </div>
+                        <div class="pt-4 border-t border-slate-200">
+                            <label class="block text-sm font-medium text-slate-700 mb-2" data-i18n="videoEditor.audio.addTrack">添加音轨</label>
+                            <input type="file" id="audioInput" accept="audio/*" class="hidden">
+                            <button id="addAudioBtn" class="w-full py-2 border-2 border-dashed border-slate-300 rounded-lg text-sm text-slate-500 hover:border-indigo-500 hover:text-indigo-600 transition-colors flex items-center justify-center gap-2">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                                </svg>
+                                <span data-i18n="videoEditor.buttons.addAudio">添加音频文件</span>
+                            </button>
+                            <div id="addedTracks" class="mt-3 space-y-2"></div>
+                        </div>
+                        <div id="audioTrackControls" class="hidden space-y-3 pt-3">
+                            <div>
+                                <label class="block text-xs text-slate-500 mb-1" data-i18n="videoEditor.audio.trackOffset">音轨偏移 (秒)</label>
+                                <input type="number" id="audioOffset" value="0" step="0.1" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm">
+                            </div>
+                            <div>
+                                <label class="block text-xs text-slate-500 mb-1" data-i18n="videoEditor.audio.trackVolume">音轨音量</label>
+                                <input type="range" id="trackVolume" min="0" max="200" value="100" class="w-full">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Video Info -->
+                <div class="p-4 border-t border-slate-200 bg-slate-50">
+                    <h4 class="text-xs font-semibold text-slate-500 uppercase mb-2" data-i18n="videoEditor.info.title">视频信息</h4>
+                    <div id="videoInfo" class="space-y-1 text-xs text-slate-600">
+                        <p class="italic text-slate-400" data-i18n="videoEditor.info.noVideo">未加载视频</p>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- Main Preview Area -->
+            <main class="flex-1 flex flex-col bg-slate-900">
+                <!-- Video Container -->
+                <div class="flex-1 flex items-center justify-center p-8 relative">
+                    <div id="emptyState" class="text-center text-slate-400">
+                        <svg class="w-20 h-20 mx-auto mb-4 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                        </svg>
+                        <p class="text-lg mb-2" data-i18n="videoEditor.empty.title">拖放视频文件到此处</p>
+                        <p class="text-sm opacity-70" data-i18n="videoEditor.empty.subtitle">或点击左侧上传按钮</p>
+                    </div>
+                    <video id="previewVideo" class="max-w-full max-h-full hidden" controls></video>
+                    <canvas id="thumbnailCanvas" class="hidden"></canvas>
+                </div>
+
+                <!-- Timeline -->
+                <div id="timelineContainer" class="bg-slate-800 border-t border-slate-700 p-4 hidden">
+                    <div class="flex items-center gap-4 mb-3">
+                        <button id="playPauseBtn" class="w-10 h-10 rounded-full bg-indigo-600 hover:bg-indigo-700 flex items-center justify-center text-white transition-colors">
+                            <svg id="playIcon" class="w-5 h-5 ml-0.5" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M8 5v14l11-7z"/>
+                            </svg>
+                            <svg id="pauseIcon" class="w-5 h-5 hidden" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>
+                            </svg>
+                        </button>
+                        <div class="text-white font-mono text-sm" id="currentTimeDisplay">00:00:00</div>
+                        <div class="flex-1 relative h-12 bg-slate-700 rounded-lg overflow-hidden cursor-pointer" id="timeline">
+                            <div id="timelineProgress" class="absolute left-0 top-0 h-full bg-indigo-600/30 w-0"></div>
+                            <div id="timelinePlayhead" class="absolute left-0 top-0 h-full w-0.5 bg-indigo-500 z-10"></div>
+                            <div id="timelineStartMarker" class="absolute left-0 top-0 h-full w-1 bg-green-500 z-20 cursor-ew-resize hidden"></div>
+                            <div id="timelineEndMarker" class="absolute left-0 top-0 h-full w-1 bg-red-500 z-20 cursor-ew-resize hidden"></div>
+                            <div id="timelineThumbnails" class="absolute inset-0 flex"></div>
+                        </div>
+                        <div class="text-white font-mono text-sm" id="durationDisplay">00:00:00</div>
+                    </div>
+                    <div class="flex justify-between text-xs text-slate-400">
+                        <span data-i18n="videoEditor.timeline.hint1">点击时间轴跳转</span>
+                        <span data-i18n="videoEditor.timeline.hint2">绿色=开始点 红色=结束点</span>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Processing Modal -->
+    <div id="processingModal" class="fixed inset-0 bg-slate-900/80 z-50 hidden flex items-center justify-center">
+        <div class="bg-white rounded-2xl p-8 max-w-md w-full mx-4">
+            <div class="text-center">
+                <div class="w-16 h-16 border-4 border-indigo-100 border-t-indigo-600 rounded-full animate-spin mx-auto mb-4"></div>
+                <h3 class="text-xl font-semibold text-slate-800 mb-2" data-i18n="videoEditor.processing.title">正在处理视频...</h3>
+                <p class="text-slate-500 mb-4" data-i18n="videoEditor.processing.subtitle">请稍候，正在使用 FFmpeg 处理</p>
+                <div class="w-full bg-slate-200 rounded-full h-2 mb-2">
+                    <div id="processingProgress" class="bg-indigo-600 h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
+                </div>
+                <p id="processingStatus" class="text-sm text-slate-400">0%</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div id="toast" class="fixed top-4 right-4 bg-white border border-slate-200 text-slate-800 px-6 py-3 rounded-xl shadow-2xl transform translate-x-full transition-transform duration-300 z-[110] flex items-center gap-3 hidden">
+        <span id="toastIcon" class="text-xl">✅</span>
+        <span id="toastMessage" data-i18n="videoEditor.toast.message">提示信息</span>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

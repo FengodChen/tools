@@ -62,6 +62,10 @@
     "github-hosts": {
       "name": "GitHub Hosts",
       "description": "自动获取 GitHub 最新 IP 地址，一键生成 Linux/macOS/Windows hosts 修改命令"
+    },
+    "video-editor": {
+      "name": "视频编辑器",
+      "description": "在线视频编辑器，支持剪辑、格式转换、多轨音频，纯本地处理"
     }
   },
   "base64": {
@@ -438,6 +442,166 @@
       "resumed": "游戏继续"
     }
   },
+  "pythonIde": {
+    "title": "🐍 Python IDE",
+    "subtitle": "基于 Pyodide 的在线 Python 集成开发环境，支持代码编辑、Notebook 模式、包管理",
+    "loading": "Pyodide 加载中...",
+    "loadingEditor": "正在初始化编辑器...",
+    "ready": "就绪",
+    "error": "加载失败",
+    "modes": {
+      "ide": "IDE",
+      "notebook": "Notebook"
+    },
+    "buttons": {
+      "run": "运行",
+      "clear": "清空输出",
+      "packages": "包管理",
+      "save": "保存项目",
+      "load": "加载",
+      "install": "安装",
+      "refresh": "刷新",
+      "export": "导出",
+      "exportTitle": "导出为 Python ZIP",
+      "fullscreen": "全屏模式",
+      "cancel": "取消",
+      "confirm": "确认",
+      "savePlot": "保存"
+    },
+    "editor": {
+      "hint": "按 Ctrl+Enter 运行代码"
+    },
+    "output": {
+      "title": "输出",
+      "console": "终端",
+      "plots": "图表",
+      "hide": "隐藏输出",
+      "show": "显示输出",
+      "clear": "清空"
+    },
+    "notebook": {
+      "addCode": "代码单元",
+      "addMarkdown": "Markdown",
+      "codePlaceholder": "输入 Python 代码...",
+      "markdownPlaceholder": "输入 Markdown..."
+    },
+    "fileExplorer": {
+      "title": "文件",
+      "newFile": "新建文件",
+      "newFolder": "新建文件夹",
+      "upload": "上传文件",
+      "prompt": "请输入文件名",
+      "folderPrompt": "请输入文件夹名",
+      "fileExists": "文件/文件夹已存在",
+      "folderCreated": "文件夹已创建",
+      "confirmDelete": "确定要删除吗？",
+      "dragHint": "拖拽文件到此处上传",
+      "download": "下载",
+      "delete": "删除",
+      "hideSidebar": "隐藏侧边栏",
+      "showSidebar": "显示侧边栏"
+    },
+    "contextMenu": {
+      "newFile": "📄 新建文件",
+      "newFolder": "📁 新建文件夹",
+      "rename": "✏️ 重命名",
+      "download": "⬇️ 下载",
+      "delete": "🗑️ 删除"
+    },
+    "packages": {
+      "title": "📦 包管理器",
+      "source": "PyPI 源",
+      "install": "安装包",
+      "placeholder": "numpy, pandas, matplotlib...",
+      "versionPlaceholder": "版本号 (可选，如: 1.24.0)",
+      "installed": "已安装包",
+      "loading": "加载中...",
+      "defaultSource": "默认 (pypi.org) - 推荐",
+      "tsinghuaSource": "清华大学 - 可能受浏览器限制",
+      "versionHint": "留空版本号则安装最新版本",
+      "corsError": "安装失败: CORS 限制，请尝试使用默认 PyPI 源",
+      "packageNotFound": "安装失败: 未找到包 \"{{package}}\"，请检查包名是否正确",
+      "versionError": "安装失败: 版本 \"{{version}}\" 不可用，请检查版本号",
+      "corsWarning": "清华源可能因浏览器 CORS 限制无法使用，如安装失败请切换回默认源"
+    },
+    "fullscreen": {
+      "enter": "进入全屏",
+      "exit": "退出全屏"
+    },
+    "editorMenu": {
+      "undo": "↩️ 撤销",
+      "redo": "↪️ 重做",
+      "cut": "✂️ 剪切",
+      "copy": "📋 复制",
+      "paste": "📄 粘贴",
+      "selectAll": "☑️ 全选",
+      "format": "✨ 格式化代码",
+      "find": "🔍 查找",
+      "replace": "🔄 替换"
+    },
+    "tabMenu": {
+      "closeTab": "关闭标签",
+      "closeOtherTabs": "关闭其他",
+      "closeTabsToRight": "关闭右侧",
+      "copyPath": "复制路径",
+      "revealInExplorer": "在文件夹中显示"
+    },
+    "outputMenu": {
+      "copyOutput": "📋 复制输出",
+      "clearOutput": "🗑️ 清空输出",
+      "selectAllOutput": "☑️ 全选"
+    },
+    "emptyMenu": {
+      "newFile": "📄 新建文件",
+      "newFolder": "📁 新建文件夹",
+      "pasteFile": "📋 粘贴文件",
+      "toggleFullscreen": "⛶ 全屏模式"
+    },
+    "toast": {
+      "noCode": "请输入代码",
+      "noPackage": "请输入包名",
+      "runSuccess": "运行完成",
+      "runError": "运行出错",
+      "installSuccess": "{{package}} 安装成功",
+      "installError": "安装失败: {{error}}",
+      "saved": "项目已保存",
+      "loaded": "项目已加载",
+      "loadError": "加载失败",
+      "fileExists": "文件已存在",
+      "renamed": "重命名成功",
+      "pathCopied": "路径已复制",
+      "revealedInExplorer": "已在文件树中展开",
+      "outputCopied": "输出已复制",
+      "formatted": "代码已格式化",
+      "alreadyFormatted": "代码已经是格式化状态",
+      "clipboardError": "无法访问剪贴板",
+      "noOutput": "没有可复制的内容",
+      "fileCreated": "文件已创建",
+      "fullscreenEnter": "已进入全屏模式",
+      "fullscreenExit": "已退出全屏模式",
+      "fullscreenError": "无法进入全屏模式",
+      "plotSaved": "图表已保存",
+      "fileDownloaded": "已下载: {{name}}",
+      "folderDownloaded": "文件夹已下载: {{name}}.zip",
+      "downloadFailed": "下载失败: {{error}}",
+      "moveToSubfolderError": "不能将文件夹移动到其子文件夹中",
+      "duplicateName": "目标位置已存在同名文件/文件夹",
+      "moveSuccess": "移动成功",
+      "exportSuccess": "Python 项目已导出为 ZIP（包含 requirements.txt）",
+      "exportFailed": "导出失败: {{error}}",
+      "zipLoaded": "ZIP 项目已加载",
+      "fileSkipped": "文件 {{name}} 已存在，已跳过",
+      "fileUploaded": "文件 {{name}} 已上传",
+      "imageUploaded": "图片 {{name}} 已上传",
+      "videoUploaded": "视频 {{name}} 已上传",
+      "audioUploaded": "音频 {{name}} 已上传",
+      "fileUploadedWithSize": "文件 {{name}} 已上传 ({{size}})",
+      "moveInDevelopment": "文件移动功能开发中",
+      "noPackages": "暂无已安装包",
+      "packagesLoadFailed": "加载失败",
+      "noCellOutput": "无输出"
+    }
+  },
   "imageEditor": {
     "title": "🖼️ 图片编辑器",
     "subtitle": "简单易用的在线图片编辑工具，支持裁剪、旋转、翻转等功能",
@@ -520,6 +684,91 @@
       "copyError": "复制失败，请重试",
       "pasteError": "粘贴失败，请重试",
       "noImageInClipboard": "剪贴板中没有图片"
+    }
+  },
+  "videoEditor": {
+    "title": "🎬 在线视频编辑器",
+    "loading": {
+      "title": "正在初始化编辑器...",
+      "subtitle": "首次加载可能需要一些时间"
+    },
+    "buttons": {
+      "upload": "上传视频",
+      "export": "导出视频",
+      "downloadOriginal": "下载原视频",
+      "setCurrent": "设为当前",
+      "preview": "预览",
+      "apply": "应用",
+      "clearAll": "清空所有",
+      "addAudio": "添加音频文件"
+    },
+    "upload": {
+      "hint": "支持 MP4, MOV, AVI, WebM 等格式"
+    },
+    "tabs": {
+      "cut": "剪辑",
+      "convert": "转换",
+      "audio": "音频"
+    },
+    "cut": {
+      "startTime": "开始时间",
+      "endTime": "结束时间",
+      "segments": "已添加的片段",
+      "noSegments": "暂无片段"
+    },
+    "convert": {
+      "format": "输出格式",
+      "quality": "视频质量",
+      "resolution": "分辨率",
+      "gifOptions": "GIF 选项",
+      "fps": "帧率",
+      "width": "宽度 (px)"
+    },
+    "quality": {
+      "high": "高质量 (原画)",
+      "medium": "中等质量",
+      "low": "低质量 (压缩)"
+    },
+    "resolution": {
+      "original": "原始分辨率"
+    },
+    "audio": {
+      "volume": "音量调整",
+      "mute": "静音原视频",
+      "addTrack": "添加音轨",
+      "trackOffset": "音轨偏移 (秒)",
+      "trackVolume": "音轨音量"
+    },
+    "info": {
+      "title": "视频信息",
+      "noVideo": "未加载视频",
+      "name": "文件名",
+      "size": "大小",
+      "duration": "时长",
+      "resolution": "分辨率"
+    },
+    "empty": {
+      "title": "拖放视频文件到此处",
+      "subtitle": "或点击左侧上传按钮"
+    },
+    "timeline": {
+      "hint1": "点击时间轴跳转",
+      "hint2": "绿色=开始点 红色=结束点"
+    },
+    "processing": {
+      "title": "正在处理视频...",
+      "subtitle": "请稍候，正在使用 FFmpeg 处理"
+    },
+    "toast": {
+      "message": "提示信息",
+      "videoLoaded": "视频已加载",
+      "invalidTime": "开始时间必须小于结束时间",
+      "segmentAdded": "片段已添加",
+      "segmentsCleared": "已清空所有片段",
+      "audioAdded": "音频已添加",
+      "noVideo": "请先上传视频",
+      "exportSuccess": "导出成功",
+      "exportError": "导出失败"
     }
   }
 }

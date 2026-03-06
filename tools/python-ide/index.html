@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title data-i18n="pythonIde.title">🐍 Python IDE</title>
+    <script src="../../js/i18n.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/pyodide/v0.25.0/full/pyodide.js"></script>
+    <link rel="stylesheet" href="../../css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/codemirror.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/theme/dracula.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/addon/hint/show-hint.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/codemirror.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/mode/python/python.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/addon/hint/show-hint.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/addon/hint/python-hint.js"></script>
+    <link rel="stylesheet" href="python-ide.css">
+</head>
+<body class="bg-gray-50 text-slate-700 h-screen flex flex-col">
+    <!-- Header -->
+    <header class="bg-white border-b border-gray-200 px-4 py-2 flex items-center justify-between flex-shrink-0">
+        <div class="flex items-center gap-4">
+            <a href="../../index.html" class="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-gray-600 bg-white border border-gray-300 rounded-md hover:bg-gray-50 hover:text-indigo-600 hover:border-indigo-300 transition-all shadow-sm">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                </svg>
+                <span data-i18n="back">返回首页</span>
+            </a>
+            <h1 class="text-lg font-semibold text-gray-800" data-i18n="pythonIde.title">🐍 Python IDE</h1>
+            <span id="pyodideStatus" class="text-xs px-2 py-1 rounded bg-yellow-100 text-yellow-800" data-i18n="pythonIde.loading">加载中...</span>
+        </div>
+        
+        <div class="flex items-center gap-2">
+            <!-- Mode Switch -->
+            <div class="flex bg-gray-100 rounded p-1">
+                <button id="ideModeBtn" class="px-3 py-1 rounded text-sm font-medium transition mode-active" data-i18n="pythonIde.modes.ide" onclick="switchMode('ide')">IDE</button>
+                <button id="notebookModeBtn" class="px-3 py-1 rounded text-sm font-medium transition" data-i18n="pythonIde.modes.notebook" onclick="switchMode('notebook')">Notebook</button>
+            </div>
+            
+            <!-- Action Buttons -->
+            <button onclick="runCode()" id="runBtn" class="px-4 py-1.5 bg-green-600 hover:bg-green-700 text-white rounded text-sm font-medium flex items-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                <span>▶</span> <span data-i18n="pythonIde.buttons.run">运行</span>
+            </button>
+            <button onclick="clearOutput()" class="px-3 py-1.5 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded text-sm flex items-center gap-1">
+                <span>🗑️</span> <span data-i18n="pythonIde.buttons.clear">清空输出</span>
+            </button>
+            
+            <!-- Package Manager -->
+            <button onclick="togglePackagePanel()" class="px-3 py-1.5 bg-indigo-100 hover:bg-indigo-200 text-indigo-700 rounded text-sm flex items-center gap-1">
+                <span>📚</span> <span data-i18n="pythonIde.buttons.packages">包管理</span>
+            </button>
+            
+            <!-- File Operations -->
+            <button onclick="saveProject()" class="px-3 py-1.5 bg-blue-100 hover:bg-blue-200 text-blue-700 rounded text-sm flex items-center gap-1">
+                <span>💾</span> <span data-i18n="pythonIde.buttons.save">保存项目</span>
+            </button>
+            <button onclick="exportPythonProject()" class="px-3 py-1.5 bg-purple-100 hover:bg-purple-200 text-purple-700 rounded text-sm flex items-center gap-1" data-i18n-title="pythonIde.buttons.exportTitle">
+                <span>📤</span> <span>导出</span>
+            </button>
+            <label class="px-3 py-1.5 bg-teal-100 hover:bg-teal-200 text-teal-700 rounded text-sm cursor-pointer flex items-center gap-1">
+                <span>📂</span> <span data-i18n="pythonIde.buttons.load">加载</span>
+                <input type="file" id="loadInput" accept=".json,.py,.ipynb,.zip" class="hidden" onchange="loadProject(this)">
+            </label>
+            
+            <!-- Fullscreen Button -->
+            <button id="fullscreenBtn" onclick="toggleFullscreen()" class="px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded text-sm flex items-center gap-1" data-i18n-title="pythonIde.buttons.fullscreen">
+                <span id="fullscreenIcon">⛶</span>
+            </button>
+            
+            <div class="language-switcher-container ml-2"></div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <div class="flex-1 flex overflow-hidden">
+        <!-- Sidebar - File Explorer -->
+        <aside id="sidebar" class="w-56 bg-white border-r border-gray-200 flex flex-col hidden md:flex relative" style="min-width: 150px;">
+            <div class="p-3 border-b border-gray-200 flex items-center justify-between">
+                <h3 class="text-xs font-semibold text-gray-500 uppercase" data-i18n="pythonIde.fileExplorer.title">文件</h3>
+                <div class="flex items-center gap-2">
+                    <span class="text-xs text-gray-400" data-i18n-title="pythonIde.fileExplorer.dragHint">💡</span>
+                    <button onclick="toggleSidebar()" class="text-gray-400 hover:text-gray-600" data-i18n-title="pythonIde.fileExplorer.hideSidebar">◀</button>
+                </div>
+            </div>
+            <div id="fileTreeContainer" class="flex-1 overflow-y-auto p-2 drop-zone" ondrop="handleTreeDrop(event)" ondragover="handleTreeDragOver(event)" ondragleave="handleTreeDragLeave(event)">
+                <div id="fileList" class="space-y-1">
+                    <!-- File tree will be rendered here -->
+                </div>
+            </div>
+            <div class="p-3 border-t border-gray-200 space-y-2">
+                <button onclick="addNewFile()" class="w-full px-2 py-1.5 text-sm bg-gray-100 hover:bg-gray-200 rounded text-left flex items-center gap-1">
+                    <span>📄</span> <span data-i18n="pythonIde.fileExplorer.newFile">新建文件</span>
+                </button>
+                <button onclick="addNewFolder()" class="w-full px-2 py-1.5 text-sm bg-gray-100 hover:bg-gray-200 rounded text-left flex items-center gap-1">
+                    <span>📁</span> <span data-i18n="pythonIde.fileExplorer.newFolder">新建文件夹</span>
+                </button>
+                <label class="w-full px-2 py-1.5 text-sm bg-gray-100 hover:bg-gray-200 rounded text-left flex items-center gap-1 cursor-pointer block">
+                    <span>📥</span> <span data-i18n="pythonIde.fileExplorer.upload">上传文件</span>
+                    <input type="file" id="uploadInput" multiple class="hidden" onchange="handleFileUpload(this)">
+                </label>
+            </div>
+        </aside>
+        
+        <!-- Sidebar resizer -->
+        <div class="resizer hidden md:block" id="sidebarResizer"></div>
+        
+        <!-- Sidebar toggle (visible when sidebar is hidden) -->
+        <div id="sidebarToggle" class="sidebar-toggle hidden" onclick="toggleSidebar()" data-i18n-title="pythonIde.fileExplorer.showSidebar">▶</div>
+
+        <!-- Editor Area -->
+        <main class="flex-1 flex flex-col min-w-0 relative">
+            <!-- IDE Mode Editor -->
+            <div id="ideContainer" class="flex-1 flex flex-col">
+                <!-- Editor Tabs -->
+                <div id="editorTabs" class="editor-tabs">
+                    <!-- Tabs will be rendered here -->
+                </div>
+                <div class="bg-gray-100 px-3 py-1 text-xs text-gray-600 flex items-center justify-between">
+                    <span id="currentFileLabel">main.py</span>
+                    <span class="text-gray-400" data-i18n="pythonIde.editor.hint">按 Ctrl+Enter 运行代码</span>
+                </div>
+                <div class="flex-1 relative">
+                    <div id="editorLoading" class="editor-loading">
+                        <div class="loading-spinner mb-4" style="width: 40px; height: 40px; border-width: 4px;"></div>
+                        <p class="text-gray-300 text-sm" data-i18n="pythonIde.loadingEditor">正在初始化编辑器...</p>
+                    </div>
+                    <textarea id="codeEditor"></textarea>
+                </div>
+            </div>
+
+            <!-- Notebook Mode Editor (Hidden by default) -->
+            <div id="notebookContainer" class="flex-1 overflow-y-auto p-4 space-y-4 hidden">
+                <div id="notebookCells" class="max-w-4xl mx-auto space-y-4"></div>
+                <div class="max-w-4xl mx-auto flex justify-center gap-2">
+                    <button onclick="addNotebookCell('code')" class="px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded text-sm flex items-center gap-1">
+                        <span>+</span> <span data-i18n="pythonIde.notebook.addCode">代码单元</span>
+                    </button>
+                    <button onclick="addNotebookCell('markdown')" class="px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded text-sm flex items-center gap-1">
+                        <span>+</span> <span data-i18n="pythonIde.notebook.addMarkdown">Markdown</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Output resizer -->
+            <div class="output-resizer" id="outputResizer"></div>
+            
+            <!-- Output Panel -->
+            <div id="outputPanel" class="h-48 bg-gray-900 text-white flex flex-col border-t border-gray-700" style="min-height: 100px;">
+                <div class="bg-gray-800 px-3 py-1 text-xs flex items-center justify-between">
+                    <div class="flex items-center gap-2">
+                        <span class="text-gray-300" data-i18n="pythonIde.output.title">输出</span>
+                        <button onclick="toggleOutputPanel()" class="text-gray-400 hover:text-white" data-i18n-title="pythonIde.output.hide">▼</button>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <button onclick="toggleOutputTab('console')" id="consoleTab" class="px-2 py-0.5 rounded text-xs bg-gray-700 text-white" data-i18n="pythonIde.output.console">终端</button>
+                        <button onclick="toggleOutputTab('plots')" id="plotsTab" class="px-2 py-0.5 rounded text-xs text-gray-400 hover:text-white" data-i18n="pythonIde.output.plots">图表</button>
+                        <button onclick="clearOutput()" class="text-gray-400 hover:text-white" data-i18n-title="pythonIde.output.clear">🗑️</button>
+                    </div>
+                </div>
+                <div class="flex-1 overflow-auto p-3 font-mono text-sm">
+                    <div id="consoleOutput" class="output-area space-y-1"></div>
+                    <div id="plotsOutput" class="plot-output hidden space-y-4"></div>
+                </div>
+            </div>
+            
+            <!-- Output panel toggle (visible when hidden) -->
+            <button id="outputToggle" onclick="toggleOutputPanel()" class="hidden absolute bottom-0 right-4 px-3 py-1 bg-gray-800 text-white text-xs rounded-t" data-i18n-title="pythonIde.output.show">▲ 输出</button>
+        </main>
+    </div>
+
+    <!-- Package Manager Panel (Overlay) -->
+    <div id="packagePanel" class="fixed inset-0 bg-black/50 hidden z-50">
+        <div class="absolute right-0 top-0 bottom-0 w-96 bg-white shadow-xl flex flex-col">
+            <div class="p-4 border-b border-gray-200 flex items-center justify-between">
+                <h3 class="font-semibold" data-i18n="pythonIde.packages.title">📦 包管理器</h3>
+                <button onclick="togglePackagePanel()" class="text-gray-500 hover:text-gray-700 text-xl">&times;</button>
+            </div>
+            <div class="p-4 space-y-4 flex-1 overflow-y-auto">
+                <!-- Pip Source -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2" data-i18n="pythonIde.packages.source">PyPI 源</label>
+                    <select id="pipSource" class="w-full px-3 py-2 border border-gray-300 rounded text-sm" onchange="onPipSourceChange()">
+                        <option value="default" data-i18n="pythonIde.packages.defaultSource">默认 (pypi.org) - 推荐</option>
+                        <option value="tsinghua" data-i18n="pythonIde.packages.tsinghuaSource">清华大学 - 可能受浏览器限制</option>
+                    </select>
+                    <p id="pipSourceWarning" class="mt-1 text-xs text-orange-600 hidden" data-i18n="pythonIde.packages.corsWarning">
+                        ⚠️ 清华源可能因浏览器 CORS 限制无法使用，如安装失败请切换回默认源
+                    </p>
+                </div>
+                
+                <!-- Install Package -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2" data-i18n="pythonIde.packages.install">安装包</label>
+                    <div class="flex gap-2 mb-2">
+                        <input type="text" id="packageName" placeholder="numpy, pandas, matplotlib..." 
+                            class="flex-1 px-3 py-2 border border-gray-300 rounded text-sm"
+                            data-i18n-placeholder="pythonIde.packages.placeholder">
+                    </div>
+                    <div class="flex gap-2">
+                        <input type="text" id="packageVersion" placeholder="版本号 (可选，如: 1.24.0)" 
+                            class="flex-1 px-3 py-2 border border-gray-300 rounded text-sm"
+                            data-i18n-placeholder="pythonIde.packages.versionPlaceholder">
+                        <button onclick="installPackage()" id="installBtn" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded text-sm whitespace-nowrap" data-i18n="pythonIde.buttons.install">安装</button>
+                    </div>
+                    <p class="mt-1 text-xs text-gray-500" data-i18n="pythonIde.packages.versionHint">留空版本号则安装最新版本</p>
+                </div>
+                
+                <!-- Installed Packages -->
+                <div>
+                    <div class="flex items-center justify-between mb-2">
+                        <label class="text-sm font-medium text-gray-700" data-i18n="pythonIde.packages.installed">已安装包</label>
+                        <button onclick="refreshPackages()" class="text-xs text-indigo-600 hover:text-indigo-700" data-i18n="pythonIde.buttons.refresh">刷新</button>
+                    </div>
+                    <div id="installedPackages" class="bg-gray-50 rounded p-2 text-sm space-y-1 max-h-64 overflow-y-auto">
+                        <div class="text-gray-400 text-center py-4" data-i18n="pythonIde.packages.loading">加载中...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div id="toastContainer" class="fixed top-4 right-4 z-50 space-y-2"></div>
+
+    <!-- Custom Input Modal -->
+    <div id="customInputModal" class="custom-modal hidden">
+        <div class="custom-modal-content">
+            <div class="custom-modal-title" id="customModalTitle">输入</div>
+            <input type="text" id="customModalInput" class="custom-modal-input" placeholder="">
+            <div class="custom-modal-buttons">
+                <button class="custom-modal-btn custom-modal-btn-secondary" id="customModalCancel" data-i18n="pythonIde.buttons.cancel">取消</button>
+                <button class="custom-modal-btn custom-modal-btn-primary" id="customModalConfirm" data-i18n="pythonIde.buttons.confirm">确认</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Context Menu -->
+    <div id="contextMenu" class="context-menu hidden">
+        <div class="context-menu-item" data-action="newFile" data-i18n="pythonIde.contextMenu.newFile">📄 新建文件</div>
+        <div class="context-menu-item" data-action="newFolder" data-i18n="pythonIde.contextMenu.newFolder">📁 新建文件夹</div>
+        <div class="context-menu-item" data-action="rename" data-i18n="pythonIde.contextMenu.rename">✏️ 重命名</div>
+        <div class="context-menu-item" data-action="download" data-i18n="pythonIde.contextMenu.download">⬇️ 下载</div>
+        <div class="context-menu-divider"></div>
+        <div class="context-menu-item text-red-600" data-action="delete" data-i18n="pythonIde.contextMenu.delete">🗑️ 删除</div>
+    </div>
+
+    <!-- Editor Context Menu -->
+    <div id="editorContextMenu" class="context-menu hidden">
+        <div class="context-menu-item" data-action="undo" data-i18n="pythonIde.editorMenu.undo">↩️ 撤销</div>
+        <div class="context-menu-item" data-action="redo" data-i18n="pythonIde.editorMenu.redo">↪️ 重做</div>
+        <div class="context-menu-divider"></div>
+        <div class="context-menu-item" data-action="cut" data-i18n="pythonIde.editorMenu.cut">✂️ 剪切</div>
+        <div class="context-menu-item" data-action="copy" data-i18n="pythonIde.editorMenu.copy">📋 复制</div>
+        <div class="context-menu-item" data-action="paste" data-i18n="pythonIde.editorMenu.paste">📄 粘贴</div>
+        <div class="context-menu-divider"></div>
+        <div class="context-menu-item" data-action="selectAll" data-i18n="pythonIde.editorMenu.selectAll">☑️ 全选</div>
+        <div class="context-menu-item" data-action="format" data-i18n="pythonIde.editorMenu.format">✨ 格式化代码</div>
+        <div class="context-menu-divider"></div>
+        <div class="context-menu-item" data-action="find" data-i18n="pythonIde.editorMenu.find">🔍 查找</div>
+        <div class="context-menu-item" data-action="replace" data-i18n="pythonIde.editorMenu.replace">🔄 替换</div>
+    </div>
+
+    <!-- Tab Context Menu -->
+    <div id="tabContextMenu" class="context-menu hidden">
+        <div class="context-menu-item" data-action="closeTab" data-i18n="pythonIde.tabMenu.closeTab">关闭标签</div>
+        <div class="context-menu-item" data-action="closeOtherTabs" data-i18n="pythonIde.tabMenu.closeOtherTabs">关闭其他</div>
+        <div class="context-menu-item" data-action="closeTabsToRight" data-i18n="pythonIde.tabMenu.closeTabsToRight">关闭右侧</div>
+        <div class="context-menu-divider"></div>
+        <div class="context-menu-item" data-action="copyPath" data-i18n="pythonIde.tabMenu.copyPath">复制路径</div>
+        <div class="context-menu-item" data-action="revealInExplorer" data-i18n="pythonIde.tabMenu.revealInExplorer">在文件夹中显示</div>
+    </div>
+
+    <!-- Output Context Menu -->
+    <div id="outputContextMenu" class="context-menu hidden">
+        <div class="context-menu-item" data-action="copyOutput" data-i18n="pythonIde.outputMenu.copyOutput">📋 复制输出</div>
+        <div class="context-menu-item" data-action="clearOutput" data-i18n="pythonIde.outputMenu.clearOutput">🗑️ 清空输出</div>
+        <div class="context-menu-divider"></div>
+        <div class="context-menu-item" data-action="selectAllOutput" data-i18n="pythonIde.outputMenu.selectAllOutput">☑️ 全选</div>
+    </div>
+
+    <!-- Empty Area Context Menu -->
+    <div id="emptyContextMenu" class="context-menu hidden">
+        <div class="context-menu-item" data-action="newFile" data-i18n="pythonIde.emptyMenu.newFile">📄 新建文件</div>
+        <div class="context-menu-item" data-action="newFolder" data-i18n="pythonIde.emptyMenu.newFolder">📁 新建文件夹</div>
+        <div class="context-menu-divider"></div>
+        <div class="context-menu-item" data-action="pasteFile" data-i18n="pythonIde.emptyMenu.pasteFile">📋 粘贴文件</div>
+        <div class="context-menu-divider"></div>
+        <div class="context-menu-item" data-action="toggleFullscreen" data-i18n="pythonIde.emptyMenu.toggleFullscreen">⛶ 全屏模式</div>
+    </div>
+
+    <script src="enhanced-hint.js"></script>
+    <script src="python-ide.js"></script>
+</body>
+</html>

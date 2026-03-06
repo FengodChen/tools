@@ -1,0 +1,501 @@
+        * { box-sizing: border-box; }
+        body { margin: 0; padding: 0; overflow: hidden; }
+        
+        /* Global context menu prevention */
+        * {
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            -khtml-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+        
+        /* Allow text selection in specific areas */
+        .CodeMirror *,
+        .output-area *,
+        .cell-output *,
+        .rename-input,
+        input[type="text"],
+        textarea {
+            -webkit-user-select: text;
+            -khtml-user-select: text;
+            -moz-user-select: text;
+            -ms-user-select: text;
+            user-select: text;
+        }
+        
+        /* Prevent default context menu on IDE elements */
+        .ide-container,
+        #sidebar,
+        #fileList,
+        .editor-tabs,
+        #outputPanel,
+        .CodeMirror,
+        .notebook-cell,
+        .file-tree-item,
+        .editor-tab {
+            -webkit-context-menu: none;
+        }
+        .CodeMirror { height: 100%; font-size: 14px; }
+        .output-area { font-family: 'Consolas', 'Monaco', monospace; }
+        .plot-output img { max-width: 100%; height: auto; }
+        .mode-active { background: #4f46e5 !important; color: white !important; }
+        .toast { animation: fadeInOut 3s ease-in-out; }
+        @keyframes fadeInOut {
+            0%, 100% { opacity: 0; transform: translateY(-20px); }
+            10%, 90% { opacity: 1; transform: translateY(0); }
+        }
+        .loading-spinner {
+            border: 3px solid #f3f3f3; border-top: 3px solid #4f46e5;
+            border-radius: 50%; width: 24px; height: 24px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .notebook-cell { border-left: 3px solid transparent; transition: border-color 0.2s; }
+        .notebook-cell:hover { border-left-color: #4f46e5; }
+        .notebook-cell.selected { border-left-color: #4f46e5; background: #f8fafc; }
+        .cell-output { background: #f1f5f9; border-radius: 4px; }
+        .drag-over { background: #e0e7ff !important; border: 2px dashed #4f46e5 !important; }
+        
+        /* CodeMirror Hint Styles */
+        .CodeMirror-hints {
+            position: absolute;
+            z-index: 1000;
+            overflow: hidden;
+            list-style: none;
+            margin: 0;
+            padding: 2px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+            border-radius: 4px;
+            border: 1px solid #4f46e5;
+            background: #282a36;
+            font-size: 13px;
+            font-family: 'Consolas', 'Monaco', monospace;
+            max-height: 250px;
+            overflow-y: auto;
+        }
+        .CodeMirror-hint {
+            margin: 0;
+            padding: 6px 10px;
+            border-radius: 3px;
+            white-space: pre;
+            color: #f8f8f2;
+            cursor: pointer;
+        }
+        .CodeMirror-hint-active {
+            background: #4f46e5;
+            color: white;
+        }
+        .CodeMirror-hint-keyword { color: #ff79c6; }
+        .CodeMirror-hint-function { color: #8be9fd; }
+        .CodeMirror-hint-variable { color: #f8f8f2; }
+        .CodeMirror-hint-class { color: #f1fa8c; }
+        .CodeMirror-hint-module { color: #bd93f9; }
+        .CodeMirror-hint-type { color: #50fa7b; }
+        
+        /* Function Parameter Hint Tooltip */
+        .param-hint-tooltip {
+            position: absolute;
+            z-index: 1001;
+            background: #1e1e2e;
+            border: 1px solid #4f46e5;
+            border-radius: 6px;
+            padding: 8px 12px;
+            max-width: 500px;
+            max-height: 200px;
+            overflow-y: auto;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 12px;
+            color: #f8f8f2;
+            pointer-events: none;
+        }
+        .param-hint-signature {
+            color: #8be9fd;
+            margin-bottom: 4px;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+        .param-hint-doc {
+            color: #aaa;
+            font-size: 11px;
+            line-height: 1.4;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+        .param-hint-active {
+            color: #50fa7b;
+            font-weight: bold;
+        }
+        
+        /* Custom Modal Styles */
+        .custom-modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 2000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .custom-modal.hidden {
+            display: none;
+        }
+        .custom-modal-content {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            min-width: 300px;
+            max-width: 400px;
+            box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);
+        }
+        .custom-modal-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            color: #1f2937;
+        }
+        .custom-modal-input {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 14px;
+            margin-bottom: 16px;
+            outline: none;
+        }
+        .custom-modal-input:focus {
+            border-color: #4f46e5;
+            ring: 2px solid #e0e7ff;
+        }
+        .custom-modal-buttons {
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+        }
+        .custom-modal-btn {
+            padding: 6px 16px;
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s;
+        }
+        .custom-modal-btn-primary {
+            background: #4f46e5;
+            color: white;
+        }
+        .custom-modal-btn-primary:hover {
+            background: #4338ca;
+        }
+        .custom-modal-btn-secondary {
+            background: #f3f4f6;
+            color: #374151;
+        }
+        .custom-modal-btn-secondary:hover {
+            background: #e5e7eb;
+        }
+        
+        /* Editor Loading Overlay */
+        .editor-loading {
+            position: absolute;
+            inset: 0;
+            background: #282a36;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+        }
+        .editor-loading.hidden {
+            display: none;
+        }
+        
+        /* Language Switcher - Position Fix for IDE Page */
+        .language-switcher-container {
+            position: relative !important;
+            right: auto !important;
+            top: auto !important;
+        }
+        
+        /* Language Switcher - Light Theme Override for IDE Page */
+        .language-switcher .lang-btn {
+            background: #e0e7ff;
+            border: 1px solid #c7d2fe;
+            color: #4338ca;
+        }
+        .language-switcher .lang-btn:hover {
+            background: #dbe4ff;
+            border-color: #a5b4fc;
+        }
+        .language-switcher .lang-dropdown {
+            background: white;
+            border: 1px solid #e5e7eb;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+        .language-switcher .lang-option {
+            color: #374151;
+        }
+        .language-switcher .lang-option:hover {
+            background: #f3f4f6;
+        }
+        .language-switcher .lang-option.active {
+            background: #e0e7ff;
+            color: #4338ca;
+        }
+        
+        /* File Tree Styles */
+        .file-tree-item {
+            cursor: pointer;
+            user-select: none;
+        }
+        .file-tree-item:hover {
+            background: #f3f4f6;
+        }
+        .file-tree-item.active {
+            background: #e0e7ff;
+            color: #4338ca;
+        }
+        .file-tree-item.drag-over {
+            background: #c7d2fe;
+            border: 2px dashed #4f46e5;
+        }
+        .file-tree-folder {
+            font-weight: 500;
+        }
+        .file-tree-children {
+            margin-left: 16px;
+            border-left: 1px solid #e5e7eb;
+            padding-left: 4px;
+        }
+        .file-tree-toggle {
+            width: 16px;
+            text-align: center;
+            display: inline-block;
+        }
+        .file-actions {
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+        .file-tree-item:hover .file-actions {
+            opacity: 1;
+        }
+        
+        /* Context Menu */
+        .context-menu {
+            position: fixed;
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            z-index: 1000;
+            min-width: 160px;
+            padding: 4px 0;
+        }
+        .context-menu.hidden {
+            display: none;
+        }
+        .context-menu-item {
+            padding: 8px 16px;
+            cursor: pointer;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: background 0.15s;
+        }
+        .context-menu-item:hover {
+            background: #f3f4f6;
+        }
+        .context-menu-divider {
+            height: 1px;
+            background: #e5e7eb;
+            margin: 4px 0;
+        }
+
+        /* Rename input */
+        .rename-input {
+            background: white;
+            border: 2px solid #4f46e5;
+            border-radius: 3px;
+            padding: 2px 6px;
+            font-size: 14px;
+            outline: none;
+            width: calc(100% - 40px);
+        }
+
+        /* Improved folder toggle */
+        .file-tree-toggle {
+            width: 20px;
+            height: 20px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 3px;
+            transition: background 0.15s;
+            cursor: pointer;
+        }
+        .file-tree-toggle:hover {
+            background: #e5e7eb;
+        }
+        .file-tree-folder {
+            user-select: none;
+        }
+        
+        /* Drop Zone */
+        .drop-zone {
+            border: 2px dashed transparent;
+            transition: all 0.2s;
+        }
+        .drop-zone.drag-over {
+            border-color: #4f46e5;
+            background: #e0e7ff;
+        }
+        
+        /* Fullscreen styles */
+        .ide-fullscreen {
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            width: 100vw !important;
+            height: 100vh !important;
+            z-index: 9999 !important;
+        }
+        .ide-fullscreen header {
+            position: relative;
+            z-index: 10000;
+        }
+
+        /* Long press visual feedback */
+        .long-press-active {
+            background: #e0e7ff !important;
+            transform: scale(0.98);
+            transition: all 0.1s;
+        }
+
+        /* Editor context menu specific */
+        #editorContextMenu {
+            min-width: 180px;
+        }
+
+        /* Tab context menu specific */
+        #tabContextMenu {
+            min-width: 160px;
+        }
+
+        /* Output context menu specific */
+        #outputContextMenu {
+            min-width: 150px;
+        }
+        
+        /* Resizable panels */
+        .resizer {
+            width: 4px;
+            cursor: col-resize;
+            background: transparent;
+            transition: background 0.2s;
+        }
+        .resizer:hover {
+            background: #4f46e5;
+        }
+        
+        /* Output panel resizer */
+        .output-resizer {
+            height: 4px;
+            cursor: row-resize;
+            background: #374151;
+            transition: background 0.2s;
+        }
+        .output-resizer:hover {
+            background: #4f46e5;
+        }
+        
+        /* Sidebar toggle */
+        .sidebar-toggle {
+            position: absolute;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 20px;
+            height: 60px;
+            background: #4f46e5;
+            color: white;
+            border-radius: 0 4px 4px 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 50;
+            font-size: 12px;
+        }
+        .sidebar-toggle:hover {
+            background: #4338ca;
+        }
+        
+        /* Hidden states */
+        .sidebar-hidden {
+            width: 0 !important;
+            min-width: 0 !important;
+            overflow: hidden;
+            padding: 0 !important;
+        }
+        
+        /* File viewer modal */
+        .file-viewer-modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.8);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .file-viewer-content {
+            background: white;
+            border-radius: 8px;
+            max-width: 90vw;
+            max-height: 90vh;
+            overflow: auto;
+        }
+        .file-viewer-close {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+        }
+        
+        /* Tabs */
+        .editor-tabs {
+            display: flex;
+            background: #1e1e1e;
+            border-bottom: 1px solid #333;
+            overflow-x: auto;
+        }
+        .editor-tab {
+            padding: 8px 16px;
+            background: #2d2d2d;
+            color: #ccc;
+            border-right: 1px solid #1e1e1e;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            white-space: nowrap;
+        }
+        .editor-tab:hover {
+            background: #3d3d3d;
+        }
+        .editor-tab.active {
+            background: #282a36;
+            color: white;
+        }
+        .editor-tab-close {
+            opacity: 0.5;
+        }
+        .editor-tab-close:hover {
+            opacity: 1;
+            color: #ff5555;
+        }
