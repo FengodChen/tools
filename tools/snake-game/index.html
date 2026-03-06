@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title data-i18n="snake.title">🐍 贪食蛇游戏</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="../../js/i18n.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #f8fafc;
+            min-height: 100vh;
+        }
+
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(0, 0, 0, 0.08);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #475569;
+            color: #ffffff;
+            transition: all 0.3s ease;
+        }
+
+        .btn-secondary:hover {
+            background: #334155;
+            transform: translateY(-1px);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            transition: all 0.3s ease;
+        }
+
+        .btn-success:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(16, 185, 129, 0.4);
+        }
+
+        .btn-warning {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            transition: all 0.3s ease;
+        }
+
+        .btn-warning:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(245, 158, 11, 0.4);
+        }
+
+        /* Language Switcher Styles */
+        .language-switcher-container {
+            position: absolute;
+            top: 0;
+            right: 0;
+            z-index: 50;
+        }
+
+        .language-switcher {
+            position: relative;
+            display: inline-block;
+        }
+
+        .lang-btn {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 14px;
+            background: rgba(255, 255, 255, 0.9);
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            border-radius: 24px;
+            color: #334155;
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            backdrop-filter: blur(8px);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        }
+
+        .lang-btn:hover {
+            background: rgba(255, 255, 255, 1);
+            border-color: rgba(0, 0, 0, 0.15);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+        }
+
+        .lang-icon {
+            font-size: 1rem;
+        }
+
+        .lang-text {
+            white-space: nowrap;
+        }
+
+        .lang-arrow {
+            font-size: 0.625rem;
+            opacity: 0.7;
+            transition: transform 0.15s ease;
+        }
+
+        .lang-dropdown.show ~ .lang-btn .lang-arrow,
+        .lang-btn[aria-expanded="true"] .lang-arrow {
+            transform: rotate(180deg);
+        }
+
+        .lang-dropdown {
+            position: absolute;
+            top: calc(100% + 8px);
+            right: 0;
+            min-width: 140px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            border: 1px solid #e5e7eb;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px);
+            transition: all 0.15s ease;
+            z-index: 100;
+            overflow: hidden;
+        }
+
+        .lang-dropdown.show {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .lang-option {
+            display: block;
+            width: 100%;
+            padding: 10px 16px;
+            text-align: left;
+            background: none;
+            border: none;
+            color: #1f2937;
+            font-size: 0.9375rem;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .lang-option:hover {
+            background: #f9fafb;
+        }
+
+        .lang-option.active {
+            background: #eef2ff;
+            color: #4f46e5;
+            font-weight: 500;
+        }
+
+        /* Game Canvas Styles */
+        .game-canvas-container {
+            background: #1a1a2e;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        #gameCanvas {
+            display: block;
+        }
+
+        /* Control buttons */
+        .control-btn {
+            width: 60px;
+            height: 60px;
+            border: none;
+            border-radius: 12px;
+            background: rgba(102, 126, 234, 0.1);
+            color: #667eea;
+            font-size: 1.5rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .control-btn:hover {
+            background: rgba(102, 126, 234, 0.2);
+            transform: scale(1.05);
+        }
+
+        .control-btn:active {
+            transform: scale(0.95);
+            background: rgba(102, 126, 234, 0.3);
+        }
+
+        /* Loading screen */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #1a1a2e;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            transition: opacity 0.5s ease;
+        }
+
+        .loading-overlay.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 3px solid rgba(102, 126, 234, 0.3);
+            border-top-color: #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .loading-text {
+            margin-top: 20px;
+            color: #888;
+        }
+
+        /* Stats box */
+        .stat-box {
+            background: linear-gradient(135deg, #f0f4ff 0%, #e0e7ff 100%);
+            border-radius: 12px;
+            padding: 16px 24px;
+            text-align: center;
+        }
+
+        .stat-label {
+            color: #64748b;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 4px;
+        }
+
+        .stat-value {
+            font-size: 1.75rem;
+            font-weight: bold;
+            color: #4f46e5;
+        }
+
+        /* Toast */
+        .toast {
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @media (max-width: 768px) {
+            .language-switcher-container {
+                position: relative;
+                margin-bottom: 16px;
+                text-align: right;
+            }
+        }
+    </style>
+</head>
+<body class="text-slate-700 p-4 md:p-8">
+    <!-- Loading Screen -->
+    <div class="loading-overlay" id="loading">
+        <div class="spinner"></div>
+        <div class="loading-text" data-i18n="snake.loading">加载 Rust WASM 模块中...</div>
+    </div>
+
+    <div class="max-w-4xl mx-auto relative">
+        <!-- Language Switcher -->
+        <div class="language-switcher-container"></div>
+
+        <!-- Back Link -->
+        <a href="../../index.html" class="inline-flex items-center gap-2 text-slate-500 hover:text-slate-800 transition-colors mb-6">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+            </svg>
+            <span data-i18n="back">返回首页</span>
+        </a>
+
+        <!-- Header -->
+        <div class="text-center mb-8">
+            <h1 class="text-4xl md:text-5xl font-bold mb-3 bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent" data-i18n="snake.title">
+                🐍 贪食蛇游戏
+            </h1>
+            <p class="text-slate-500 text-lg" data-i18n="snake.subtitle">使用 Rust + WebAssembly 开发的高性能贪食蛇小游戏</p>
+        </div>
+
+        <!-- Stats Bar -->
+        <div class="grid grid-cols-3 gap-4 mb-6">
+            <div class="stat-box">
+                <div class="stat-label" data-i18n="snake.score">得分</div>
+                <div class="stat-value" id="scoreDisplay">0</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-label" data-i18n="snake.length">长度</div>
+                <div class="stat-value" id="lengthDisplay">3</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-label" data-i18n="snake.highScore">最高分</div>
+                <div class="stat-value" id="highScoreDisplay">0</div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="glass-panel rounded-2xl shadow-2xl p-6 md:p-8">
+            <!-- Game Canvas -->
+            <div class="game-canvas-container mb-6 mx-auto" style="width: fit-content;">
+                <canvas id="gameCanvas"></canvas>
+            </div>
+
+            <!-- Control Buttons -->
+            <div class="flex flex-wrap gap-3 justify-center mb-8">
+                <button id="pauseBtn" class="btn-warning text-white px-6 py-3 rounded-xl font-medium flex items-center gap-2 shadow-lg">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    <span data-i18n="snake.buttons.pause">暂停</span>
+                </button>
+                
+                <button id="restartBtn" class="btn-success text-white px-6 py-3 rounded-xl font-medium flex items-center gap-2 shadow-lg">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                    </svg>
+                    <span data-i18n="snake.buttons.restart">重新开始</span>
+                </button>
+            </div>
+
+            <!-- Touch Controls -->
+            <div class="flex justify-center mb-8">
+                <div class="grid grid-cols-3 gap-2">
+                    <div></div>
+                    <button class="control-btn up" data-key="ArrowUp">↑</button>
+                    <div></div>
+                    <button class="control-btn left" data-key="ArrowLeft">←</button>
+                    <button class="control-btn down" data-key="ArrowDown">↓</button>
+                    <button class="control-btn right" data-key="ArrowRight">→</button>
+                </div>
+            </div>
+
+            <!-- Instructions -->
+            <div class="bg-slate-100 p-6 rounded-xl border border-slate-200">
+                <h4 class="font-semibold text-blue-600 mb-4 flex items-center gap-2 text-lg">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    <span data-i18n="snake.controls.title">游戏说明</span>
+                </h4>
+                <div class="grid md:grid-cols-2 gap-4 text-sm text-slate-600">
+                    <div class="space-y-2">
+                        <p>• <span data-i18n="snake.controls.keyboard">使用方向键或 WASD 控制蛇的移动</span></p>
+                        <p>• <span data-i18n="snake.controls.pauseKey">空格键暂停游戏</span></p>
+                    </div>
+                    <div class="space-y-2">
+                        <p>• <span data-i18n="snake.controls.goal">吃掉红色食物增长得分，不要撞到自己！</span></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div id="toast" class="fixed top-4 right-4 bg-white border border-slate-200 text-slate-800 px-6 py-3 rounded-xl shadow-2xl transform translate-x-full transition-transform duration-300 z-[110] flex items-center gap-3 hidden">
+        <span id="toastIcon" class="text-xl">ℹ️</span>
+        <span id="toastMessage">提示信息</span>
+    </div>
+
+    <script type="module">
+        import init, { SnakeGame } from './pkg/snake_game.js';
+
+        let game = null;
+        let lastUpdateTime = 0;
+        const UPDATE_INTERVAL = 100;
+        let animationId = null;
+        let highScore = localStorage.getItem('snake-high-score') || 0;
+
+        // Update high score display
+        document.getElementById('highScoreDisplay').textContent = highScore;
+
+        async function initGame() {
+            await init();
+            
+            const canvas = document.getElementById('gameCanvas');
+            game = new SnakeGame(canvas);
+            
+            // Hide loading screen
+            document.getElementById('loading').classList.add('hidden');
+            
+            // Start game loop
+            gameLoop(0);
+        }
+
+        function gameLoop(timestamp) {
+            if (timestamp - lastUpdateTime >= UPDATE_INTERVAL) {
+                const wasGameOver = game.is_game_over();
+                game.update();
+                
+                // Check if game just ended
+                if (!wasGameOver && game.is_game_over()) {
+                    handleGameOver();
+                }
+                
+                lastUpdateTime = timestamp;
+            }
+            
+            game.render();
+            updateUI();
+            
+            animationId = requestAnimationFrame(gameLoop);
+        }
+
+        function handleGameOver() {
+            const score = game.get_score();
+            const isNewRecord = score > highScore;
+            
+            if (isNewRecord) {
+                highScore = score;
+                localStorage.setItem('snake-high-score', highScore);
+                document.getElementById('highScoreDisplay').textContent = highScore;
+                showToast(I18N.t('snake.toast.newRecord') || '🎉 恭喜！创造了新纪录！', 'success');
+            } else {
+                showToast((I18N.t('snake.toast.gameOver') || '游戏结束！得分：{{score}}').replace('{{score}}', score), 'info');
+            }
+        }
+
+        function updateUI() {
+            const score = game.get_score();
+            document.getElementById('scoreDisplay').textContent = score;
+            document.getElementById('lengthDisplay').textContent = (score / 10) + 3;
+            
+            const pauseBtn = document.getElementById('pauseBtn');
+            const pauseText = pauseBtn.querySelector('span');
+            if (game.is_paused() && !game.is_game_over()) {
+                pauseText.textContent = I18N.t('snake.buttons.resume') || '继续';
+            } else {
+                pauseText.textContent = I18N.t('snake.buttons.pause') || '暂停';
+            }
+        }
+
+        function showToast(message, type = 'info') {
+            const toast = document.getElementById('toast');
+            const icon = document.getElementById('toastIcon');
+            const msg = document.getElementById('toastMessage');
+            
+            const icons = {
+                success: '✅',
+                error: '❌',
+                warning: '⚠️',
+                info: 'ℹ️'
+            };
+            
+            icon.textContent = icons[type] || icons.info;
+            msg.textContent = message;
+            
+            toast.classList.remove('hidden');
+            toast.classList.remove('translate-x-full');
+            
+            setTimeout(() => {
+                toast.classList.add('translate-x-full');
+                setTimeout(() => {
+                    toast.classList.add('hidden');
+                }, 300);
+            }, 3000);
+        }
+
+        // Keyboard controls - 只保留方向键、WASD和空格
+        document.addEventListener('keydown', (e) => {
+            if (!game) return;
+            
+            const keyMap = {
+                'ArrowUp': 'ArrowUp',
+                'ArrowDown': 'ArrowDown',
+                'ArrowLeft': 'ArrowLeft',
+                'ArrowRight': 'ArrowRight',
+                'w': 'w', 'W': 'W',
+                's': 's', 'S': 'S',
+                'a': 'a', 'A': 'A',
+                'd': 'd', 'D': 'D',
+                ' ': ' '
+            };
+            
+            if (keyMap[e.key]) {
+                e.preventDefault();
+                game.handle_key(e.key);
+                
+                // Show toast for pause/resume
+                if (e.key === ' ') {
+                    if (game.is_paused() && !game.is_game_over()) {
+                        showToast(I18N.t('snake.toast.paused') || '游戏已暂停', 'info');
+                    } else {
+                        showToast(I18N.t('snake.toast.resumed') || '游戏继续', 'success');
+                    }
+                }
+            }
+        });
+
+        // Touch controls
+        document.querySelectorAll('.control-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                if (!game) return;
+                game.handle_key(btn.dataset.key);
+            });
+        });
+
+        // Pause button
+        document.getElementById('pauseBtn').addEventListener('click', () => {
+            if (!game) return;
+            game.handle_key(' ');
+            if (game.is_paused() && !game.is_game_over()) {
+                showToast(I18N.t('snake.toast.paused') || '游戏已暂停', 'info');
+            } else {
+                showToast(I18N.t('snake.toast.resumed') || '游戏继续', 'success');
+            }
+        });
+
+        // Restart button
+        document.getElementById('restartBtn').addEventListener('click', () => {
+            if (!game) return;
+            game.restart();
+        });
+
+        // Initialize i18n when DOM is ready
+        document.addEventListener('DOMContentLoaded', async function() {
+            await I18N.init();
+            I18N.initLanguageSwitcher('.language-switcher-container');
+            
+            // Initialize game after i18n is ready
+            initGame().catch(console.error);
+        });
+    </script>
+</body>
+</html>

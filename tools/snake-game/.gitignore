@@ -1,0 +1,26 @@
+# Rust 编译中间产物（不需要）
+/target/
+Cargo.lock
+
+# wasm-pack 生成的 pkg 目录中不需要的文件
+# 首先忽略 pkg 目录下所有内容
+/pkg/*
+
+# 然后保留静态 web 加载所需的文件
+!/pkg/snake_game.js
+!/pkg/snake_game_bg.wasm
+
+# 可选：如果你需要 TypeScript 类型定义，可以取消下面注释
+# !/pkg/snake_game.d.ts
+# !/pkg/snake_game_bg.wasm.d.ts
+
+# IDE 和编辑器
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS 生成的文件
+.DS_Store
+Thumbs.db

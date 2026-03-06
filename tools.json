@@ -76,6 +76,20 @@
         "工具"
       ],
       "date": "2026-03-05"
+    },
+    {
+      "id": "snake-game",
+      "name": "贪食蛇游戏",
+      "description": "使用 Rust + WebAssembly 开发的高性能贪食蛇小游戏，支持键盘和触屏控制",
+      "icon": "🐍",
+      "path": "tools/snake-game/index.html",
+      "tags": [
+        "游戏",
+        "娱乐",
+        "Rust",
+        "WASM"
+      ],
+      "date": "2026-03-06"
     }
   ]
 }

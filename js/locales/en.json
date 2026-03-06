@@ -406,5 +406,36 @@
       "noContent": "No content to copy",
       "hostsCopied": "Hosts content copied to clipboard"
     }
+  },
+  "snake": {
+    "title": "🐍 Snake Game",
+    "subtitle": "High-performance Snake game built with Rust + WebAssembly",
+    "score": "Score",
+    "length": "Length",
+    "highScore": "High Score",
+    "buttons": {
+      "pause": "Pause",
+      "resume": "Resume",
+      "restart": "Restart"
+    },
+    "controls": {
+      "title": "How to Play",
+      "keyboard": "Use arrow keys or WASD to control the snake",
+      "pauseKey": "Space to pause",
+      "goal": "Eat red food to score, don't crash into yourself!"
+    },
+    "gameOver": {
+      "title": "Game Over",
+      "finalScore": "Final Score",
+      "newRecord": "🎉 New Record!",
+      "pressRestart": "Press R or click button to restart"
+    },
+    "loading": "Loading Rust WASM module...",
+    "toast": {
+      "gameOver": "Game Over! Score: {{score}}",
+      "newRecord": "🎉 Congratulations! New record!",
+      "paused": "Game paused",
+      "resumed": "Game resumed"
+    }
   }
 }

@@ -406,5 +406,36 @@
       "noContent": "没有可复制的内容",
       "hostsCopied": "Hosts 内容已复制到剪贴板"
     }
+  },
+  "snake": {
+    "title": "🐍 贪食蛇游戏",
+    "subtitle": "使用 Rust + WebAssembly 开发的高性能贪食蛇小游戏",
+    "score": "得分",
+    "length": "长度",
+    "highScore": "最高分",
+    "buttons": {
+      "pause": "暂停",
+      "resume": "继续",
+      "restart": "重新开始"
+    },
+    "controls": {
+      "title": "游戏说明",
+      "keyboard": "使用方向键或 WASD 控制蛇的移动",
+      "pauseKey": "空格键暂停游戏",
+      "goal": "吃掉红色食物增长得分，不要撞到自己！"
+    },
+    "gameOver": {
+      "title": "游戏结束",
+      "finalScore": "最终得分",
+      "newRecord": "🎉 新纪录！",
+      "pressRestart": "按 R 键或点击按钮重新开始"
+    },
+    "loading": "加载 Rust WASM 模块中...",
+    "toast": {
+      "gameOver": "游戏结束！得分：{{score}}",
+      "newRecord": "🎉 恭喜！创造了新纪录！",
+      "paused": "游戏已暂停",
+      "resumed": "游戏继续"
+    }
   }
 }
