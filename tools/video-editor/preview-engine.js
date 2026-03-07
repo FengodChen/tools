@@ -296,13 +296,28 @@ export class PreviewEngine {
     /**
      * Split a clip at the given time
      */
-    splitClip(clipId, splitTime) {
+    splitClip(clipId, splitTime, file = null, type = 'video') {
         if (!this.wasmEngine) return null;
         
         try {
-            const result = this.wasmEngine.split_clip(clipId, splitTime);
+            const newClipId = this.wasmEngine.split_clip(clipId, splitTime);
+            
+            // Register media element for the new clip
+            if (newClipId && file) {
+                const newClip = {
+                    id: newClipId,
+                    type: type,
+                    file: file
+                };
+                if (type === 'video') {
+                    this.registerVideoClip(newClip);
+                } else if (type === 'audio') {
+                    this.registerAudioClip(newClip);
+                }
+            }
+            
             this.clearLayersCache();
-            return result;
+            return newClipId;
         } catch (e) {
             console.error('Failed to split clip:', e);
             return null;
@@ -540,7 +555,8 @@ export class PreviewEngine {
     syncAndRenderWithFrameCallback() {
         const layers = this.getCompositionLayers(this.currentTime);
         
-        // Find the active video layer - V1 takes priority over V2
+        // Find the active video layer - V1 (upper track) takes priority over V2 (lower track)
+        // Track 0 (V1) is above Track 1 (V2), so it should be checked first
         let activeVideoLayer = null;
         let activeVideo = null;
         
@@ -621,7 +637,8 @@ export class PreviewEngine {
     syncAndRender(forceSeek = false) {
         const layers = this.getCompositionLayers(this.currentTime);
         
-        // Find the active video layer - V1 takes priority over V2
+        // Find the active video layer - V1 (upper track) takes priority over V2 (lower track)
+        // Track 0 (V1) is above Track 1 (V2), so it should be checked first
         let activeVideoLayer = null;
         let activeVideo = null;
         
@@ -729,7 +746,8 @@ export class PreviewEngine {
         
         const layers = this.getCompositionLayers(this.currentTime);
         
-        // Find the active video layer - V1 takes priority over V2
+        // Find the active video layer - V1 (upper track) takes priority over V2 (lower track)
+        // Track 0 (V1) is above Track 1 (V2), so it should be checked first
         let activeVideoLayer = null;
         for (const layer of layers) {
             if (layer.track_index === 0) {

@@ -655,7 +655,7 @@ function bindTimelineInteraction() {
     
     // Ruler mouse events - unified with tracks container
     elements.timelineRuler.addEventListener('mousedown', (e) => {
-        // Only handle if clicking directly on ruler or ruler canvas
+        // Only handle if clicking directly on ruler or ruler canvas (not on playhead)
         if (e.target === elements.timelineRuler || e.target === elements.rulerCanvas) {
             const rect = elements.timelineRuler.getBoundingClientRect();
             const x = e.clientX - rect.left + elements.timelineTracksWrapper.scrollLeft;
@@ -666,8 +666,25 @@ function bindTimelineInteraction() {
             state.dragType = 'playhead';
             state.dragStartX = e.clientX;
             state.dragStartTime = time;
+            state.dragTarget = null;
             document.body.style.cursor = 'ew-resize';
         }
+    });
+    
+    // Bind playhead specific events for direct dragging
+    elements.playhead.addEventListener('mousedown', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        state.isDragging = true;
+        state.dragType = 'playhead';
+        state.dragStartX = e.clientX;
+        state.dragStartTime = state.previewEngine?.getCurrentTime() || 0;
+        state.dragTarget = null;
+        document.body.style.cursor = 'ew-resize';
+        
+        // Add visual feedback
+        elements.playhead.style.cursor = 'grabbing';
     });
     
     // Timeline scroll sync
@@ -1473,17 +1490,10 @@ function getTrackElement(trackId) {
 function handleTimelineMouseDown(e) {
     if (e.button !== 0) return;
     
-    // Check if clicking on playhead
+    // Check if clicking on playhead (this is handled by the playhead's own mousedown event)
     const playheadEl = e.target.closest('.playhead');
     if (playheadEl) {
-        // Start playhead drag
-        e.preventDefault();
-        e.stopPropagation();
-        state.isDragging = true;
-        state.dragType = 'playhead';
-        state.dragStartX = e.clientX;
-        state.dragStartTime = state.previewEngine?.getCurrentTime() || 0;
-        document.body.style.cursor = 'ew-resize';
+        // The playhead's own mousedown handler will take care of this
         return;
     }
     
@@ -1520,6 +1530,7 @@ function handleTimelineMouseDown(e) {
     state.dragType = 'playhead';
     state.dragStartX = e.clientX;
     state.dragStartTime = time;
+    state.dragTarget = null;
     document.body.style.cursor = 'ew-resize';
 }
 
@@ -1710,23 +1721,27 @@ function updateClipCollisionVisual(clip, hasCollision) {
 }
 
 function handleDrag(clientX, clientY) {
-    if (!state.isDragging || !state.dragTarget) return;
+    if (!state.isDragging) return;
     
     const deltaX = clientX - state.dragStartX;
     const deltaY = clientY - state.dragStartY;
     const deltaTime = deltaX / state.pixelsPerSecond;
-    const clip = state.dragTarget;
     
     // Mark that an actual drag has occurred
     if (Math.abs(deltaX) > 3 || Math.abs(deltaY) > 3) {
         if (!state.hasDragged) {
             state.hasDragged = true;
-            saveHistory(); // Save history only when actual drag starts
+            if (state.dragTarget) {
+                saveHistory(); // Save history only when actual drag starts
+            }
         }
     }
     
     switch (state.dragType) {
         case 'clip':
+            if (!state.dragTarget) return;
+            const clip = state.dragTarget;
+            
             // Handle horizontal movement (time) - smooth/sub-pixel precision
             let newStart = Math.max(0, state.dragStartTime + deltaTime);
             clip.startTime = newStart;
@@ -1767,23 +1782,46 @@ function handleDrag(clientX, clientY) {
             break;
             
         case 'resize-left':
-            const newStartTime = Math.max(0, Math.min(clip.endTime - 0.1, state.dragStartTime + deltaTime));
-            clip.startTime = newStartTime;
-            updateClipPosition(clip);
+            if (!state.dragTarget) return;
+            const resizeClip = state.dragTarget;
+            const newStartTime = Math.max(0, Math.min(resizeClip.endTime - 0.1, state.dragStartTime + deltaTime));
+            resizeClip.startTime = newStartTime;
+            updateClipPosition(resizeClip);
             break;
             
         case 'resize-right':
-            const newEndTime = Math.max(clip.startTime + 0.1, state.dragStartTime + deltaTime);
-            clip.endTime = newEndTime;
-            updateClipPosition(clip);
+            if (!state.dragTarget) return;
+            const resizeClipRight = state.dragTarget;
+            const newEndTime = Math.max(resizeClipRight.startTime + 0.1, state.dragStartTime + deltaTime);
+            resizeClipRight.endTime = newEndTime;
+            updateClipPosition(resizeClipRight);
             break;
             
         case 'playhead':
+            // Calculate new time based on drag delta
             const playheadDeltaX = clientX - state.dragStartX;
             const playheadDeltaTime = playheadDeltaX / state.pixelsPerSecond;
             const newTime = Math.max(0, state.dragStartTime + playheadDeltaTime);
             const duration = state.previewEngine?.getDuration() || 0;
-            seekTo(Math.min(newTime, duration));
+            const clampedTime = Math.min(newTime, duration);
+            
+            // Update playhead position immediately for smooth dragging
+            state.previewEngine.currentTime = clampedTime;
+            updatePlayhead(clampedTime);
+            
+            // Update time display
+            elements.currentTimeDisplay.textContent = formatTimecode(clampedTime);
+            
+            // Render frame in real-time during drag
+            if (state.previewEngine) {
+                state.previewEngine.renderFrame();
+            }
+            
+            // Update drag start position for continuous dragging
+            if (Math.abs(playheadDeltaX) > 50) {
+                state.dragStartX = clientX;
+                state.dragStartTime = clampedTime;
+            }
             break;
     }
 }
@@ -1817,6 +1855,20 @@ function endDrag() {
         
         // Remove drag preview
         removeDragPreview();
+    }
+    
+    // Handle playhead drag end - ensure final position is synced
+    if (state.dragType === 'playhead' && state.hasDragged) {
+        const currentTime = state.previewEngine?.getCurrentTime() || 0;
+        // Final render to ensure preview is up to date
+        if (state.previewEngine) {
+            state.previewEngine.seekTo(currentTime);
+        }
+    }
+    
+    // Reset playhead cursor
+    if (elements.playhead) {
+        elements.playhead.style.cursor = 'ew-resize';
     }
     
     // Hide snap indicator
@@ -2170,9 +2222,11 @@ function splitClipAt(clip, time) {
     saveHistory();
     
     // Split in WASM engine
+    let wasmSplitSuccess = false;
     let newId = null;
     if (state.previewEngine) {
-        newId = state.previewEngine.splitClip(clip.id, time);
+        newId = state.previewEngine.splitClip(clip.id, time, clip.file, clip.type);
+        wasmSplitSuccess = !!newId;
     }
     
     if (!newId) {
@@ -2203,8 +2257,15 @@ function splitClipAt(clip, time) {
     
     // Update WASM
     if (state.previewEngine) {
-        state.previewEngine.updateClip(firstClip);
-        state.previewEngine.addClip(secondClip);
+        if (wasmSplitSuccess) {
+            // WASM splitClip already created both parts, so we only update first clip
+            // to ensure srcEnd is synced. The second clip was already added by splitClip.
+            state.previewEngine.updateClip(firstClip);
+        } else {
+            // Fallback: manually update first clip and add second clip
+            state.previewEngine.updateClip(firstClip);
+            state.previewEngine.addClip(secondClip);
+        }
     }
     
     renderClips();
@@ -2475,14 +2536,24 @@ function updatePlayhead(currentTime) {
     // Auto-scroll timeline to keep playhead visible during playback
     const containerWidth = elements.timelineTracksWrapper.clientWidth;
     const scrollLeft = elements.timelineTracksWrapper.scrollLeft;
-    const playheadVisible = left >= scrollLeft && left <= scrollLeft + containerWidth;
+    const playheadRight = left + 21; // Account for playhead width
     
-    // Only auto-scroll during playback or when playhead goes out of view
-    if (state.previewEngine?.isPlaying || !playheadVisible) {
-        if (left > scrollLeft + containerWidth - 100) {
-            elements.timelineTracksWrapper.scrollLeft = left - containerWidth / 2;
-        } else if (left < scrollLeft + 50) {
-            elements.timelineTracksWrapper.scrollLeft = Math.max(0, left - 100);
+    // Determine if playhead is near or beyond the visible edges
+    const rightEdge = scrollLeft + containerWidth;
+    const isNearRightEdge = playheadRight > rightEdge - 100;
+    const isNearLeftEdge = left < scrollLeft + 100;
+    const isOutOfView = left < scrollLeft || playheadRight > rightEdge;
+    
+    // Auto-scroll during playback or when playhead is dragged out of view
+    if (state.previewEngine?.isPlaying || isOutOfView) {
+        if (isNearRightEdge || playheadRight > rightEdge) {
+            // Scroll to keep playhead centered when approaching right edge
+            const targetScroll = left - containerWidth / 2;
+            elements.timelineTracksWrapper.scrollLeft = Math.max(0, targetScroll);
+        } else if (isNearLeftEdge || left < scrollLeft) {
+            // Scroll to keep playhead visible when approaching left edge
+            const targetScroll = left - 100;
+            elements.timelineTracksWrapper.scrollLeft = Math.max(0, targetScroll);
         }
     }
 }
