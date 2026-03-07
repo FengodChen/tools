@@ -21,6 +21,13 @@ const state = {
     clips: [],
     selectedClips: new Set(),
     nextClipId: 1,
+    
+    // Media Library
+    videoLibrary: [],
+    audioLibrary: [],
+    
+    // Track library items that have been added to timeline
+    libraryItemsInTimeline: new Set(),
     tracks: [
         { id: 'video1', type: 'video', name: 'V1', locked: false, visible: true },
         { id: 'video2', type: 'video', name: 'V2', locked: false, visible: true },
@@ -32,6 +39,8 @@ const state = {
     zoom: 50,
     pixelsPerSecond: 50,
     snapToGrid: true,
+    snapThreshold: 10, // pixels for snapping to other clips
+    frameRate: 30,
     showMarkers: true,
     
     // Tools
@@ -51,6 +60,7 @@ const state = {
     dragClipDuration: 0,
     dragOriginalTrack: null,
     hasDragged: false,
+    hasCollision: false,
     
     // Long press
     longPressTimer: null,
@@ -441,6 +451,39 @@ function bindDragAndDrop() {
             e.stopPropagation();
             zone.classList.remove('drag-over');
             
+            // Check for library item drop
+            const libraryData = e.dataTransfer.getData('application/json');
+            if (libraryData) {
+                try {
+                    const mediaData = JSON.parse(libraryData);
+                    const trackEl = e.target.closest('.track-row');
+                    let targetTrack = null;
+                    if (trackEl) {
+                        targetTrack = trackEl.dataset.track;
+                    }
+                    
+                    if (mediaData.type === 'video') {
+                        const mediaItem = state.videoLibrary.find(item => item.id === mediaData.id);
+                        if (mediaItem) {
+                            // Load from library without re-adding to library
+                            loadVideoFromLibrary(mediaItem, targetTrack);
+                        }
+                    } else if (mediaData.type === 'audio') {
+                        const mediaItem = state.audioLibrary.find(item => item.id === mediaData.id);
+                        if (mediaItem) {
+                            if (targetTrack && targetTrack.startsWith('audio')) {
+                                addAudioClipToTrackFromLibrary(mediaItem, targetTrack);
+                            } else {
+                                addAudioClipFromLibrary(mediaItem);
+                            }
+                        }
+                    }
+                    return;
+                } catch (err) {
+                    console.error('Failed to parse library data:', err);
+                }
+            }
+            
             const files = Array.from(e.dataTransfer.files);
             files.forEach(file => {
                 if (file.type.startsWith('video/')) {
@@ -475,6 +518,34 @@ function bindDragAndDrop() {
             e.stopPropagation();
             trackRow.style.backgroundColor = '';
             
+            // Check for library item drop
+            const libraryData = e.dataTransfer.getData('application/json');
+            if (libraryData) {
+                try {
+                    const mediaData = JSON.parse(libraryData);
+                    const targetTrack = trackRow.dataset.track;
+                    
+                    if (mediaData.type === 'video') {
+                        const mediaItem = state.videoLibrary.find(item => item.id === mediaData.id);
+                        if (mediaItem) {
+                            loadVideoFromLibrary(mediaItem, targetTrack);
+                        }
+                    } else if (mediaData.type === 'audio') {
+                        const mediaItem = state.audioLibrary.find(item => item.id === mediaData.id);
+                        if (mediaItem) {
+                            if (targetTrack.startsWith('audio')) {
+                                addAudioClipToTrackFromLibrary(mediaItem, targetTrack);
+                            } else {
+                                addAudioClipFromLibrary(mediaItem);
+                            }
+                        }
+                    }
+                    return;
+                } catch (err) {
+                    console.error('Failed to parse library data:', err);
+                }
+            }
+            
             const files = Array.from(e.dataTransfer.files);
             const targetTrack = trackRow.dataset.track;
             
@@ -488,12 +559,73 @@ function bindDragAndDrop() {
         });
     });
     
+    // Bind drag and drop for library panels
+    bindLibraryDropZones();
+    
     // Effect items drag
     document.querySelectorAll('.effect-item').forEach(item => {
         item.addEventListener('dragstart', (e) => {
             e.dataTransfer.setData('effect', item.dataset.effect);
         });
     });
+}
+
+function bindLibraryDropZones() {
+    // Video library drop zone
+    const videoLibraryDropZone = elements.videoClipList;
+    if (videoLibraryDropZone) {
+        videoLibraryDropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            videoLibraryDropZone.classList.add('drag-over');
+        });
+        
+        videoLibraryDropZone.addEventListener('dragleave', () => {
+            videoLibraryDropZone.classList.remove('drag-over');
+        });
+        
+        videoLibraryDropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            videoLibraryDropZone.classList.remove('drag-over');
+            
+            const files = Array.from(e.dataTransfer.files);
+            files.forEach(file => {
+                if (file.type.startsWith('video/')) {
+                    addToVideoLibrary(file);
+                    showToast('视频已添加到素材库', 'success');
+                }
+            });
+        });
+    }
+    
+    // Audio library drop zone
+    const audioLibraryDropZone = elements.audioClipList;
+    if (audioLibraryDropZone) {
+        audioLibraryDropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            audioLibraryDropZone.classList.add('drag-over');
+        });
+        
+        audioLibraryDropZone.addEventListener('dragleave', () => {
+            audioLibraryDropZone.classList.remove('drag-over');
+        });
+        
+        audioLibraryDropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            audioLibraryDropZone.classList.remove('drag-over');
+            
+            const files = Array.from(e.dataTransfer.files);
+            files.forEach(file => {
+                if (file.type.startsWith('audio/')) {
+                    addToAudioLibrary(file);
+                    showToast('音频已添加到素材库', 'success');
+                }
+            });
+        });
+    }
 }
 
 function bindTrackControls() {
@@ -1455,6 +1587,7 @@ function startClipDrag(x, y, clip) {
     state.dragClipDuration = clip.endTime - clip.startTime;
     state.dragOriginalTrack = clip.track;
     state.hasDragged = false; // Track if actual drag occurred
+    state.hasCollision = false; // Track collision state
     document.body.style.cursor = 'grabbing';
     
     const clipEl = document.querySelector(`.timeline-clip[data-id="${clip.id}"]`);
@@ -1521,6 +1654,61 @@ function isIntersecting(rect1, rect2) {
              rect2.bottom < rect1.top);
 }
 
+// ============================================
+// Clip Collision Detection
+// ============================================
+
+/**
+ * Check if a clip collides with other clips on the same track
+ * @param {Object} dragClip - The clip being dragged
+ * @returns {Object} - { hasCollision: boolean, collidingClip: Object|null }
+ */
+function checkClipCollision(dragClip) {
+    const otherClips = state.clips.filter(c => 
+        c.id !== dragClip.id && 
+        c.track === dragClip.track &&
+        !c.locked
+    );
+    
+    for (const otherClip of otherClips) {
+        // Check time overlap
+        // Two clips overlap if:
+        // clip1.start < clip2.end AND clip1.end > clip2.start
+        const hasTimeOverlap = (
+            dragClip.startTime < otherClip.endTime && 
+            dragClip.endTime > otherClip.startTime
+        );
+        
+        if (hasTimeOverlap) {
+            return {
+                hasCollision: true,
+                collidingClip: otherClip
+            };
+        }
+    }
+    
+    return {
+        hasCollision: false,
+        collidingClip: null
+    };
+}
+
+/**
+ * Update visual feedback for collision state
+ * @param {Object} clip - The clip being dragged
+ * @param {boolean} hasCollision - Whether there's a collision
+ */
+function updateClipCollisionVisual(clip, hasCollision) {
+    const clipEl = document.querySelector(`.timeline-clip[data-id="${clip.id}"]`);
+    if (clipEl) {
+        if (hasCollision) {
+            clipEl.classList.add('collision');
+        } else {
+            clipEl.classList.remove('collision');
+        }
+    }
+}
+
 function handleDrag(clientX, clientY) {
     if (!state.isDragging || !state.dragTarget) return;
     
@@ -1539,13 +1727,23 @@ function handleDrag(clientX, clientY) {
     
     switch (state.dragType) {
         case 'clip':
-            // Handle horizontal movement (time)
-            const newStart = Math.max(0, state.dragStartTime + deltaTime);
+            // Handle horizontal movement (time) - smooth/sub-pixel precision
+            let newStart = Math.max(0, state.dragStartTime + deltaTime);
             clip.startTime = newStart;
             clip.endTime = newStart + state.dragClipDuration;
             
+            // Smart snapping: check for alignment with other clips
             if (state.snapToGrid) {
-                snapClipToGrid(clip);
+                const snapInfo = findSmartSnapPosition(clip);
+                if (snapInfo.snapFound) {
+                    clip.startTime = snapInfo.newStartTime;
+                    clip.endTime = snapInfo.newStartTime + state.dragClipDuration;
+                    showSnapIndicator(snapInfo);
+                } else {
+                    hideSnapIndicator();
+                    // Fallback to frame-level snapping for precision
+                    snapToFrameLevel(clip);
+                }
             }
             
             // Handle vertical movement (track change)
@@ -1559,7 +1757,12 @@ function handleDrag(clientX, clientY) {
                 }
             }
             
+            // Check collision with other clips on the same track
+            const collisionInfo = checkClipCollision(clip);
+            state.hasCollision = collisionInfo.hasCollision;
+            
             updateClipPosition(clip);
+            updateClipCollisionVisual(clip, state.hasCollision);
             updateDragPreview(clientX, clientY);
             break;
             
@@ -1589,8 +1792,16 @@ function endDrag() {
     if (state.dragTarget) {
         const clip = state.dragTarget;
         
-        // Only update WASM if actual drag occurred
-        if (state.hasDragged) {
+        // Check if there's a collision at the end of drag
+        if (state.hasCollision && state.dragType === 'clip') {
+            // Revert to original position
+            clip.startTime = state.dragStartTime;
+            clip.endTime = state.dragStartTime + state.dragClipDuration;
+            clip.track = state.dragOriginalTrack;
+            
+            showToast('无法放置：与其他片段重叠', 'warning');
+        } else if (state.hasDragged) {
+            // Only update WASM if actual drag occurred
             // Update WASM engine with final values
             if (state.previewEngine) {
                 state.previewEngine.moveClip(clip.id, clip.startTime, clip.track);
@@ -1601,17 +1812,22 @@ function endDrag() {
         const clipEl = document.querySelector(`.timeline-clip[data-id="${clip.id}"]`);
         if (clipEl) {
             clipEl.classList.remove('dragging');
+            clipEl.classList.remove('collision');
         }
         
         // Remove drag preview
         removeDragPreview();
     }
     
+    // Hide snap indicator
+    hideSnapIndicator();
+    
     state.isDragging = false;
     state.dragType = null;
     state.dragTarget = null;
     state.dragOriginalTrack = null;
     state.hasDragged = false;
+    state.hasCollision = false;
     document.body.style.cursor = '';
     
     renderClips();
@@ -1628,10 +1844,151 @@ function updateClipPosition(clip) {
     }
 }
 
-function snapClipToGrid(clip) {
-    const snapInterval = 0.5;
-    clip.startTime = Math.round(clip.startTime / snapInterval) * snapInterval;
+// ============================================
+// Smart Snapping & Alignment
+// ============================================
+
+/**
+ * Fine-grained frame-level snapping for precise placement
+ * Uses 1/frameRate precision to avoid gaps
+ */
+function snapToFrameLevel(clip) {
+    const frameDuration = 1 / state.frameRate;
+    // Round to nearest frame for clean cuts
+    clip.startTime = Math.round(clip.startTime / frameDuration) * frameDuration;
     clip.endTime = clip.startTime + state.dragClipDuration;
+}
+
+/**
+ * Find smart snap position based on nearby clip edges
+ * Returns snap info including whether a snap was found and the target position
+ */
+function findSmartSnapPosition(dragClip) {
+    const snapThresholdPixels = state.snapThreshold;
+    const snapThresholdTime = snapThresholdPixels / state.pixelsPerSecond;
+    
+    const dragClipStart = dragClip.startTime;
+    const dragClipEnd = dragClip.endTime;
+    const dragDuration = state.dragClipDuration;
+    
+    // Collect all snap points from other clips on all tracks
+    const snapPoints = [];
+    
+    state.clips.forEach(otherClip => {
+        if (otherClip.id === dragClip.id) return;
+        
+        // Only consider clips on compatible tracks (same type)
+        const isCompatible = isTrackCompatible(dragClip.type, otherClip.track);
+        if (!isCompatible) return;
+        
+        // Add the start and end points of this clip as potential snap targets
+        snapPoints.push({
+            time: otherClip.startTime,
+            type: 'start',
+            clipId: otherClip.id,
+            track: otherClip.track
+        });
+        
+        snapPoints.push({
+            time: otherClip.endTime,
+            type: 'end',
+            clipId: otherClip.id,
+            track: otherClip.track
+        });
+    });
+    
+    // Also snap to playhead position
+    const playheadTime = state.previewEngine?.getCurrentTime() || 0;
+    snapPoints.push({
+        time: playheadTime,
+        type: 'playhead',
+        clipId: null,
+        track: null
+    });
+    
+    // Find the closest snap point for clip start
+    let bestSnap = null;
+    let minDistance = snapThresholdTime;
+    
+    for (const point of snapPoints) {
+        // Check if dragClip start can snap to this point
+        const distanceToStart = Math.abs(dragClipStart - point.time);
+        if (distanceToStart < minDistance) {
+            minDistance = distanceToStart;
+            bestSnap = {
+                snapTo: point,
+                newStartTime: point.time,
+                snapEdge: 'start'
+            };
+        }
+        
+        // Check if dragClip end can snap to this point
+        const distanceToEnd = Math.abs(dragClipEnd - point.time);
+        if (distanceToEnd < minDistance) {
+            minDistance = distanceToEnd;
+            bestSnap = {
+                snapTo: point,
+                newStartTime: point.time - dragDuration,
+                snapEdge: 'end'
+            };
+        }
+    }
+    
+    if (bestSnap) {
+        return {
+            snapFound: true,
+            newStartTime: Math.max(0, bestSnap.newStartTime),
+            snapTarget: bestSnap.snapTo,
+            snapEdge: bestSnap.snapEdge,
+            distance: minDistance
+        };
+    }
+    
+    return { snapFound: false };
+}
+
+/**
+ * Show visual indicator for snap alignment
+ */
+function showSnapIndicator(snapInfo) {
+    let indicator = document.getElementById('snapIndicator');
+    if (!indicator) {
+        indicator = document.createElement('div');
+        indicator.id = 'snapIndicator';
+        indicator.className = 'snap-indicator';
+        elements.tracksContainer.appendChild(indicator);
+    }
+    
+    const left = snapInfo.snapTarget.time * state.pixelsPerSecond;
+    indicator.style.left = `${left}px`;
+    indicator.style.display = 'block';
+    
+    // Add highlight class based on snap type
+    indicator.className = 'snap-indicator';
+    if (snapInfo.snapTarget.type === 'end') {
+        indicator.classList.add('snap-to-end');
+    } else if (snapInfo.snapTarget.type === 'start') {
+        indicator.classList.add('snap-to-start');
+    } else if (snapInfo.snapTarget.type === 'playhead') {
+        indicator.classList.add('snap-to-playhead');
+    }
+}
+
+/**
+ * Hide snap indicator
+ */
+function hideSnapIndicator() {
+    const indicator = document.getElementById('snapIndicator');
+    if (indicator) {
+        indicator.style.display = 'none';
+    }
+}
+
+/**
+ * Legacy function - replaced by frame-level snapping
+ */
+function snapClipToGrid(clip) {
+    snapToFrameLevel(clip);
 }
 
 // ============================================
@@ -2197,6 +2554,27 @@ function handleAudioUpload(e) {
 }
 
 function loadVideo(file, targetTrack = null) {
+    // Add to library first
+    const mediaItem = addToVideoLibraryInternal(file);
+    
+    // Then load from library to timeline
+    loadVideoFromLibrary(mediaItem, targetTrack);
+}
+
+function addToVideoLibraryInternal(file) {
+    const mediaItem = {
+        id: 'video_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9),
+        file: file,
+        name: file.name,
+        size: file.size,
+        type: 'video'
+    };
+    state.videoLibrary.push(mediaItem);
+    renderVideoLibrary();
+    return mediaItem;
+}
+
+function loadVideoFromLibrary(mediaItem, targetTrack = null) {
     saveHistory();
     
     // Determine video track
@@ -2229,8 +2607,8 @@ function loadVideo(file, targetTrack = null) {
             id: state.nextClipId++,
             type: 'video',
             track: videoTrack,
-            file: file,
-            name: file.name,
+            file: mediaItem.file,
+            name: mediaItem.name,
             startTime: startTime,
             endTime: startTime + duration,
             srcStart: 0,
@@ -2239,7 +2617,8 @@ function loadVideo(file, targetTrack = null) {
             volume: 100,
             speed: 1,
             locked: false,
-            muted: false
+            muted: false,
+            libraryId: mediaItem.id // Reference to library item
         };
         
         state.clips.push(videoClip);
@@ -2257,8 +2636,8 @@ function loadVideo(file, targetTrack = null) {
             id: state.nextClipId++,
             type: 'audio',
             track: audioTrack,
-            file: file, // Use same file for audio
-            name: file.name + ' (音频)',
+            file: mediaItem.file, // Use same file for audio
+            name: mediaItem.name + ' (音频)',
             startTime: startTime,
             endTime: startTime + duration,
             srcStart: 0,
@@ -2268,7 +2647,8 @@ function loadVideo(file, targetTrack = null) {
             speed: 1,
             locked: false,
             muted: false,
-            linkedVideoId: videoClip.id // Link to video clip
+            linkedVideoId: videoClip.id, // Link to video clip
+            libraryId: mediaItem.id
         };
         
         state.clips.push(audioClip);
@@ -2278,35 +2658,61 @@ function loadVideo(file, targetTrack = null) {
             state.previewEngine.addClip(audioClip);
         }
         
+        // Mark as in timeline
+        state.libraryItemsInTimeline.add(mediaItem.id);
+        
         // Show canvas
         elements.previewCanvas.classList.remove('hidden');
         elements.emptyState.classList.add('hidden');
         elements.exportBtn.disabled = false;
         
-        // Update UI
-        updateVideoClipList(file);
+        // Update UI - only update timeline, not library
         const duration_value = state.previewEngine?.getDuration() || 0;
         elements.durationDisplay.textContent = formatTimecode(duration_value);
         updateRuler();
         renderClips();
         updateSelectionInfo();
+        renderVideoLibrary(); // Re-render to show in-timeline state
         
         // Initial render
         state.previewEngine?.renderFrame();
         
-        showToast('视频和音频已加载', 'success');
+        showToast('视频和音频已添加到时间轴', 'success');
     };
     
-    video.src = URL.createObjectURL(file);
+    video.src = URL.createObjectURL(mediaItem.file);
 }
 
 function addAudioClip(file) {
-    // Default to first available audio track
-    const targetTrack = state.clips.some(c => c.track === 'audio1') ? 'audio2' : 'audio1';
-    addAudioClipToTrack(file, targetTrack);
+    const mediaItem = addToAudioLibraryInternal(file);
+    addAudioClipFromLibrary(mediaItem);
 }
 
 function addAudioClipToTrack(file, targetTrack = 'audio1') {
+    const mediaItem = addToAudioLibraryInternal(file);
+    addAudioClipToTrackFromLibrary(mediaItem, targetTrack);
+}
+
+function addToAudioLibraryInternal(file) {
+    const mediaItem = {
+        id: 'audio_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9),
+        file: file,
+        name: file.name,
+        size: file.size,
+        type: 'audio'
+    };
+    state.audioLibrary.push(mediaItem);
+    renderAudioLibrary();
+    return mediaItem;
+}
+
+function addAudioClipFromLibrary(mediaItem) {
+    // Default to first available audio track
+    const targetTrack = state.clips.some(c => c.track === 'audio1' && c.type === 'audio' && !c.linkedVideoId) ? 'audio2' : 'audio1';
+    addAudioClipToTrackFromLibrary(mediaItem, targetTrack);
+}
+
+function addAudioClipToTrackFromLibrary(mediaItem, targetTrack = 'audio1') {
     saveHistory();
     
     const audio = document.createElement('audio');
@@ -2327,8 +2733,8 @@ function addAudioClipToTrack(file, targetTrack = 'audio1') {
             id: state.nextClipId++,
             type: 'audio',
             track: targetTrack,
-            file: file,
-            name: file.name,
+            file: mediaItem.file,
+            name: mediaItem.name,
             startTime: startTime,
             endTime: startTime + duration,
             srcStart: 0,
@@ -2336,7 +2742,8 @@ function addAudioClipToTrack(file, targetTrack = 'audio1') {
             duration: duration,
             volume: 100,
             locked: false,
-            muted: false
+            muted: false,
+            libraryId: mediaItem.id
         };
         
         state.clips.push(clip);
@@ -2346,44 +2753,130 @@ function addAudioClipToTrack(file, targetTrack = 'audio1') {
             state.previewEngine.addClip(clip);
         }
         
-        updateAudioClipList(file);
+        // Mark as in timeline
+        state.libraryItemsInTimeline.add(mediaItem.id);
+        
+        renderAudioLibrary(); // Re-render to show in-timeline state
         renderClips();
         updateDuration();
         
-        showToast('音频已添加', 'success');
+        showToast('音频已添加到时间轴', 'success');
     };
     
-    audio.src = URL.createObjectURL(file);
+    audio.src = URL.createObjectURL(mediaItem.file);
 }
 
-function updateVideoClipList(file) {
-    elements.videoClipList.innerHTML = `
-        <div class="clip-item">
-            <div class="clip-thumb">🎬</div>
-            <div class="clip-info">
-                <div class="clip-name">${file.name}</div>
-                <div class="clip-meta">${formatFileSize(file.size)}</div>
+function addToVideoLibrary(file) {
+    const mediaItem = addToVideoLibraryInternal(file);
+    showToast('视频已添加到素材库', 'success');
+}
+
+function addToAudioLibrary(file) {
+    const mediaItem = addToAudioLibraryInternal(file);
+    showToast('音频已添加到素材库', 'success');
+}
+
+function renderVideoLibrary() {
+    if (state.videoLibrary.length === 0) {
+        elements.videoClipList.innerHTML = '<div class="empty-clips" data-i18n="videoEditor.project.noClips">暂无素材</div>';
+        return;
+    }
+    
+    elements.videoClipList.innerHTML = state.videoLibrary.map(item => {
+        const isInTimeline = state.libraryItemsInTimeline.has(item.id);
+        const inTimelineBadge = isInTimeline ? '<span class="media-badge" title="已在时间轴中">✓</span>' : '';
+        return `
+        <div class="media-item-row" draggable="true" data-id="${item.id}" data-type="video">
+            <div class="media-row-left">
+                <div class="media-thumb-small">
+                    <span class="media-icon">🎬</span>
+                </div>
+                <div class="media-info-row">
+                    <div class="media-name-row" title="${item.name}">${item.name}</div>
+                    <div class="media-meta-row">${formatFileSize(item.size)}</div>
+                </div>
+            </div>
+            <div class="media-row-right">
+                <div class="media-type-label">视频</div>
+                ${inTimelineBadge}
             </div>
         </div>
-    `;
+    `}).join('');
+    
+    // Bind drag events
+    elements.videoClipList.querySelectorAll('.media-item-row').forEach(item => {
+        item.addEventListener('dragstart', handleLibraryDragStart);
+        item.addEventListener('dragend', handleLibraryDragEnd);
+    });
+}
+
+function renderAudioLibrary() {
+    if (state.audioLibrary.length === 0) {
+        elements.audioClipList.innerHTML = '<div class="empty-clips" data-i18n="videoEditor.project.noAudioClips">暂无音频</div>';
+        return;
+    }
+    
+    elements.audioClipList.innerHTML = state.audioLibrary.map(item => {
+        const isInTimeline = state.libraryItemsInTimeline.has(item.id);
+        const inTimelineBadge = isInTimeline ? '<span class="media-badge" title="已在时间轴中">✓</span>' : '';
+        return `
+        <div class="media-item-row" draggable="true" data-id="${item.id}" data-type="audio">
+            <div class="media-row-left">
+                <div class="media-thumb-small">
+                    <span class="media-icon">🔊</span>
+                </div>
+                <div class="media-info-row">
+                    <div class="media-name-row" title="${item.name}">${item.name}</div>
+                    <div class="media-meta-row">${formatFileSize(item.size)}</div>
+                </div>
+            </div>
+            <div class="media-row-right">
+                <div class="media-type-label">音频</div>
+                ${inTimelineBadge}
+            </div>
+        </div>
+    `}).join('');
+    
+    // Bind drag events
+    elements.audioClipList.querySelectorAll('.media-item-row').forEach(item => {
+        item.addEventListener('dragstart', handleLibraryDragStart);
+        item.addEventListener('dragend', handleLibraryDragEnd);
+    });
+}
+
+function handleLibraryDragStart(e) {
+    const itemId = e.currentTarget.dataset.id;
+    const itemType = e.currentTarget.dataset.type;
+    
+    let mediaItem;
+    if (itemType === 'video') {
+        mediaItem = state.videoLibrary.find(item => item.id === itemId);
+    } else {
+        mediaItem = state.audioLibrary.find(item => item.id === itemId);
+    }
+    
+    if (mediaItem) {
+        e.dataTransfer.setData('application/json', JSON.stringify({
+            id: mediaItem.id,
+            type: mediaItem.type,
+            name: mediaItem.name
+        }));
+        e.dataTransfer.effectAllowed = 'copy';
+        e.currentTarget.classList.add('dragging');
+    }
+}
+
+function handleLibraryDragEnd(e) {
+    e.currentTarget.classList.remove('dragging');
+}
+
+// Legacy functions - now use the new library system
+function updateVideoClipList(file) {
+    addToVideoLibrary(file);
 }
 
 function updateAudioClipList(file) {
-    const existing = elements.audioClipList.querySelector('.empty-clips');
-    if (existing) {
-        elements.audioClipList.innerHTML = '';
-    }
-    
-    const item = document.createElement('div');
-    item.className = 'clip-item';
-    item.innerHTML = `
-        <div class="clip-thumb">🔊</div>
-        <div class="clip-info">
-            <div class="clip-name">${file.name}</div>
-            <div class="clip-meta">${formatFileSize(file.size)}</div>
-        </div>
-    `;
-    elements.audioClipList.appendChild(item);
+    addToAudioLibrary(file);
 }
 
 function updateDuration() {
@@ -2542,8 +3035,11 @@ function newProject() {
         elements.previewCanvas.classList.add('hidden');
         elements.emptyState.classList.remove('hidden');
         elements.exportBtn.disabled = true;
-        elements.videoClipList.innerHTML = '<div class="empty-clips">暂无素材</div>';
-        elements.audioClipList.innerHTML = '<div class="empty-clips">暂无音频</div>';
+        state.videoLibrary = [];
+        state.audioLibrary = [];
+        state.libraryItemsInTimeline.clear();
+        renderVideoLibrary();
+        renderAudioLibrary();
         
         renderClips();
         updateMarkers();

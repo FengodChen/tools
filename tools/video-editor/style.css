@@ -224,6 +224,8 @@ html, body {
     border-bottom: 1px solid var(--border-color);
     padding: 0 var(--spacing-md);
     flex-shrink: 0;
+    position: relative;
+    z-index: 100;
 }
 
 .menu-left {
@@ -399,6 +401,11 @@ html, body {
 }
 
 /* Language Switcher in Header */
+#langSwitcherContainer {
+    position: relative;
+    z-index: 1000;
+}
+
 #langSwitcherContainer .language-switcher {
     position: relative;
 }
@@ -421,6 +428,7 @@ html, body {
     top: calc(100% + 2px);
     right: 0;
     min-width: 120px;
+    min-height: fit-content;
     background: var(--bg-secondary);
     border: 1px solid var(--border-color);
     border-radius: var(--radius-md);
@@ -430,6 +438,10 @@ html, body {
     visibility: hidden;
     transform: translateY(-4px);
     transition: all var(--transition-fast);
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
 }
 
 #langSwitcherContainer .lang-dropdown.show {
@@ -448,6 +460,8 @@ html, body {
     cursor: pointer;
     border-radius: var(--radius-sm);
     text-align: left;
+    display: block;
+    white-space: nowrap;
 }
 
 #langSwitcherContainer .lang-option:hover {
@@ -550,10 +564,20 @@ html, body {
 
 .clip-list {
     min-height: 80px;
+    max-height: 280px;
     background: var(--bg-primary);
     border: 1px solid var(--border-light);
     border-radius: var(--radius-sm);
-    padding: var(--spacing-sm);
+    padding: var(--spacing-xs);
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.clip-list.drag-over {
+    background: rgba(79, 70, 229, 0.1);
+    border-color: var(--accent-primary);
 }
 
 .empty-clips {
@@ -561,6 +585,102 @@ html, body {
     padding: var(--spacing-lg);
     color: var(--text-muted);
     font-size: 12px;
+}
+
+/* Media Item Row in Library - 1 column, n rows layout */
+.media-item-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 10px;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-sm);
+    cursor: grab;
+    transition: all var(--transition-fast);
+    min-height: 52px;
+}
+
+.media-item-row:hover {
+    background: var(--bg-tertiary);
+    border-color: var(--accent-primary);
+}
+
+.media-item-row.dragging {
+    opacity: 0.5;
+    cursor: grabbing;
+}
+
+.media-row-left {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+}
+
+.media-thumb-small {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    background: var(--bg-primary);
+    border-radius: var(--radius-sm);
+    flex-shrink: 0;
+}
+
+.media-thumb-small .media-icon {
+    font-size: 20px;
+}
+
+.media-info-row {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    flex: 1;
+}
+
+.media-name-row {
+    font-size: 12px;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-weight: 500;
+    margin-bottom: 2px;
+}
+
+.media-meta-row {
+    font-size: 10px;
+    color: var(--text-muted);
+}
+
+.media-row-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+    margin-left: var(--spacing-sm);
+}
+
+.media-type-label {
+    font-size: 10px;
+    color: var(--text-muted);
+    background: var(--bg-primary);
+    padding: 2px 6px;
+    border-radius: 3px;
+    text-transform: uppercase;
+}
+
+.media-badge {
+    font-size: 10px;
+    color: #10b981;
+    background: rgba(16, 185, 129, 0.15);
+    padding: 2px 6px;
+    border-radius: 10px;
+    font-weight: 600;
 }
 
 .add-clip-btn {
@@ -1361,6 +1481,53 @@ html, body {
 
 .timeline-clip.locked {
     cursor: not-allowed;
+}
+
+.timeline-clip.collision {
+    background: linear-gradient(135deg, #dc2626 0%, #ef4444 100%) !important;
+    box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.5), var(--shadow-md) !important;
+    animation: collision-pulse 0.5s ease-in-out infinite alternate;
+}
+
+@keyframes collision-pulse {
+    from {
+        box-shadow: 0 0 0 2px rgba(220, 38, 38, 0.5), var(--shadow-md);
+    }
+    to {
+        box-shadow: 0 0 0 4px rgba(220, 38, 38, 0.8), var(--shadow-md);
+    }
+}
+
+/* Smart Snap Indicator */
+.snap-indicator {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: var(--accent-primary);
+    z-index: 150;
+    pointer-events: none;
+    display: none;
+}
+
+.snap-indicator.snap-to-start {
+    background: #22c55e;
+    box-shadow: 0 0 4px #22c55e, 0 0 8px #22c55e;
+}
+
+.snap-indicator.snap-to-end {
+    background: #f59e0b;
+    box-shadow: 0 0 4px #f59e0b, 0 0 8px #f59e0b;
+}
+
+.snap-indicator.snap-to-playhead {
+    background: #ef4444;
+    box-shadow: 0 0 4px #ef4444, 0 0 8px #ef4444;
+}
+
+/* Snap Target Highlight on Clips */
+.timeline-clip.snap-target {
+    box-shadow: 0 0 0 2px var(--accent-primary), var(--shadow-md);
 }
 
 /* Clip Content */
