@@ -552,16 +552,169 @@
         <div class="context-menu-items" id="contextMenuItems"></div>
     </div>
 
+    <!-- Export Settings Modal -->
+    <div class="modal hidden" id="exportSettingsModal">
+        <div class="modal-content export-settings-modal">
+            <div class="modal-header">
+                <h3 data-i18n="videoEditor.exportSettings.title">导出设置</h3>
+                <button class="modal-close" id="closeExportSettingsModal">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="export-settings-form">
+                    <!-- 导出类型 -->
+                    <div class="setting-group">
+                        <label class="setting-label" data-i18n="videoEditor.exportSettings.exportType">导出类型</label>
+                        <div class="setting-options">
+                            <label class="radio-option">
+                                <input type="radio" name="exportType" value="video" checked>
+                                <span class="radio-label">🎬 <span data-i18n="videoEditor.exportSettings.video">视频</span></span>
+                            </label>
+                            <label class="radio-option">
+                                <input type="radio" name="exportType" value="audio">
+                                <span class="radio-label">🔊 <span data-i18n="videoEditor.exportSettings.audioOnly">仅音频</span></span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- 视频格式（视频模式显示） -->
+                    <div class="setting-group" id="videoFormatGroup">
+                        <label class="setting-label" data-i18n="videoEditor.exportSettings.format">格式</label>
+                        <select id="exportFormat" class="setting-select">
+                            <option value="mp4">MP4 (H.264 + AAC)</option>
+                            <option value="mp4-hevc">MP4 (H.265/HEVC)</option>
+                            <option value="webm">WebM (VP9 + Opus)</option>
+                            <option value="webm-vp8">WebM (VP8 + Vorbis)</option>
+                            <option value="mov">MOV (ProRes)</option>
+                            <option value="avi">AVI (MPEG-4)</option>
+                            <option value="mkv">MKV (H.264)</option>
+                            <option value="gif">GIF (动画)</option>
+                        </select>
+                    </div>
+
+                    <!-- 音频格式（仅音频模式显示） -->
+                    <div class="setting-group hidden" id="audioFormatGroup">
+                        <label class="setting-label" data-i18n="videoEditor.exportSettings.audioFormat">音频格式</label>
+                        <select id="exportAudioFormat" class="setting-select">
+                            <option value="mp3">MP3 (有损压缩)</option>
+                            <option value="aac">AAC (M4A)</option>
+                            <option value="ogg">OGG (Vorbis)</option>
+                            <option value="opus">Opus (最佳压缩)</option>
+                            <option value="wav">WAV (PCM 无损)</option>
+                            <option value="flac">FLAC (无损压缩)</option>
+                            <option value="wma">WMA</option>
+                        </select>
+                    </div>
+
+                    <!-- 文件名设置 -->
+                    <div class="setting-group">
+                        <label class="setting-label" data-i18n="videoEditor.exportSettings.filename">文件名</label>
+                        <div class="filename-input-group">
+                            <input type="text" id="exportFilename" class="setting-input" placeholder="exported_video">
+                            <span class="filename-extension" id="filenameExtension">.mp4</span>
+                        </div>
+                        <div class="filename-hint" data-i18n="videoEditor.exportSettings.filenameHint">留空使用默认名称</div>
+                    </div>
+
+                    <!-- 分辨率 -->
+                    <div class="setting-group" id="resolutionGroup">
+                        <label class="setting-label" data-i18n="videoEditor.exportSettings.resolution">分辨率</label>
+                        <div class="resolution-inputs">
+                            <input type="number" id="exportWidth" class="setting-input" placeholder="宽度" min="1">
+                            <span class="resolution-separator">×</span>
+                            <input type="number" id="exportHeight" class="setting-input" placeholder="高度" min="1">
+                        </div>
+                        <div class="resolution-presets">
+                            <button type="button" class="preset-btn" data-scale="0.5">0.5x</button>
+                            <button type="button" class="preset-btn active" data-scale="1">1x</button>
+                            <button type="button" class="preset-btn" data-scale="2">2x</button>
+                            <button type="button" class="preset-btn" data-scale="4">4x</button>
+                        </div>
+                        <div class="resolution-info">
+                            <span data-i18n="videoEditor.exportSettings.originalResolution">原始分辨率</span>: 
+                            <span id="originalResolution">--</span>
+                        </div>
+                    </div>
+
+                    <!-- 编码预设 -->
+                    <div class="setting-group" id="presetGroup">
+                        <label class="setting-label" data-i18n="videoEditor.exportSettings.preset">编码速度</label>
+                        <select id="exportPreset" class="setting-select">
+                            <option value="ultrafast">超快 (文件较大)</option>
+                            <option value="superfast">很快</option>
+                            <option value="veryfast">快</option>
+                            <option value="faster">较快</option>
+                            <option value="fast" selected>快速 (推荐)</option>
+                            <option value="medium">中等</option>
+                            <option value="slow">慢 (较好质量)</option>
+                            <option value="slower">较慢</option>
+                            <option value="veryslow">非常慢 (最佳质量)</option>
+                        </select>
+                    </div>
+
+                    <!-- 质量/码率 -->
+                    <div class="setting-group">
+                        <label class="setting-label" data-i18n="videoEditor.exportSettings.quality">质量 (CRF)</label>
+                        <div class="quality-slider-container">
+                            <input type="range" id="exportQuality" min="18" max="28" value="23" class="setting-slider">
+                            <div class="quality-labels">
+                                <span>高</span>
+                                <span id="qualityValue">23</span>
+                                <span>低</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="cancelExportBtn" data-i18n="videoEditor.exportSettings.cancel">取消</button>
+                <button class="btn btn-primary" id="startExportBtn" data-i18n="videoEditor.exportSettings.startExport">开始导出</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Processing Modal -->
     <div class="processing-modal hidden" id="processingModal">
         <div class="processing-content">
             <div class="processing-spinner"></div>
-            <h3 data-i18n="videoEditor.processing.title">正在导出视频...</h3>
-            <p data-i18n="videoEditor.processing.subtitle" id="processingSubtitle">正在处理视频</p>
-            <div class="progress-bar">
-                <div class="progress-fill" id="processingProgress"></div>
+            <h3 id="processingTitle" data-i18n="videoEditor.processing.title">正在导出...</h3>
+            
+            <!-- 主进度 -->
+            <div class="main-progress-section">
+                <div class="progress-header">
+                    <span id="mainPhaseName" data-i18n="videoEditor.processing.initializing">初始化</span>
+                    <span id="mainProgressText">0%</span>
+                </div>
+                <div class="progress-bar main-progress-bar">
+                    <div class="progress-fill" id="mainProgressFill"></div>
+                </div>
             </div>
-            <p class="progress-text" id="processingStatus">0%</p>
+
+            <!-- 子进度 -->
+            <div class="sub-progress-section">
+                <div class="progress-header">
+                    <span id="subPhaseName" data-i18n="videoEditor.processing.preparing">准备中...</span>
+                    <span id="subProgressText">0%</span>
+                </div>
+                <div class="progress-bar sub-progress-bar">
+                    <div class="progress-fill sub-progress-fill" id="subProgressFill"></div>
+                </div>
+            </div>
+
+            <!-- 处理详情 -->
+            <div class="processing-details" id="processingDetails">
+                <div class="detail-item">
+                    <span class="detail-label" data-i18n="videoEditor.processing.phase">当前阶段</span>
+                    <span class="detail-value" id="currentPhase">--</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label" data-i18n="videoEditor.processing.processed">已处理</span>
+                    <span class="detail-value" id="processedInfo">--</span>
+                </div>
+            </div>
+
+            <!-- 统计信息 -->
             <div class="processing-stats" id="processingStats">
                 <div class="stat-item">
                     <span class="stat-label" data-i18n="videoEditor.processing.eta">预计剩余时间</span>
@@ -576,6 +729,11 @@
                     <span class="stat-value" id="processingMemory">-- MB</span>
                 </div>
             </div>
+
+            <!-- 取消按钮 -->
+            <button class="btn btn-secondary cancel-processing-btn" id="cancelProcessingBtn">
+                <span data-i18n="videoEditor.processing.cancel">取消导出</span>
+            </button>
         </div>
     </div>
 

@@ -822,11 +822,34 @@
       "audioTrack2": "音频 2"
     },
     "processing": {
-      "title": "正在导出视频...",
+      "title": "正在导出...",
       "subtitle": "正在处理视频",
       "eta": "预计剩余时间",
       "cpu": "CPU",
-      "memory": "内存"
+      "memory": "内存",
+      "cancel": "取消导出",
+      "phase": "当前阶段",
+      "processed": "已处理",
+      "initializing": "初始化",
+      "preparing": "准备中...",
+      "analyzing": "分析时间线..."
+    },
+    "exportSettings": {
+      "title": "导出设置",
+      "audioTitle": "导出音频设置",
+      "exportType": "导出类型",
+      "video": "视频",
+      "audioOnly": "仅音频",
+      "format": "格式",
+      "audioFormat": "音频格式",
+      "resolution": "分辨率",
+      "originalResolution": "原始分辨率",
+      "preset": "编码速度",
+      "quality": "质量 (CRF)",
+      "cancel": "取消",
+      "startExport": "开始导出",
+      "filename": "文件名",
+      "filenameHint": "留空使用默认名称"
     },
     "shortcuts": {
       "title": "键盘快捷键",

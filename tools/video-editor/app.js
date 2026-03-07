@@ -86,7 +86,13 @@ const state = {
     touchStartTime: 0,
     touchStartX: 0,
     touchStartY: 0,
-    isTouch: false
+    isTouch: false,
+    
+    // Export
+    exportCancelled: false,
+    isExporting: false,
+    exportSettings: null,
+    originalVideoDimensions: { width: 1920, height: 1080 }
 };
 
 // ============================================
@@ -173,6 +179,43 @@ function cacheElements() {
     elements.toast = document.getElementById('toast');
     elements.toastIcon = document.getElementById('toastIcon');
     elements.toastMessage = document.getElementById('toastMessage');
+    
+    // Export Settings Modal
+    elements.exportSettingsModal = document.getElementById('exportSettingsModal');
+    elements.closeExportSettingsModal = document.getElementById('closeExportSettingsModal');
+    elements.cancelExportBtn = document.getElementById('cancelExportBtn');
+    elements.startExportBtn = document.getElementById('startExportBtn');
+    elements.exportTypeRadios = document.querySelectorAll('input[name="exportType"]');
+    elements.exportFormat = document.getElementById('exportFormat');
+    elements.exportAudioFormat = document.getElementById('exportAudioFormat');
+    elements.exportWidth = document.getElementById('exportWidth');
+    elements.exportHeight = document.getElementById('exportHeight');
+    elements.exportPreset = document.getElementById('exportPreset');
+    elements.exportQuality = document.getElementById('exportQuality');
+    elements.qualityValue = document.getElementById('qualityValue');
+    elements.originalResolution = document.getElementById('originalResolution');
+    elements.videoFormatGroup = document.getElementById('videoFormatGroup');
+    elements.audioFormatGroup = document.getElementById('audioFormatGroup');
+    elements.resolutionGroup = document.getElementById('resolutionGroup');
+    elements.presetGroup = document.getElementById('presetGroup');
+    elements.presetBtns = document.querySelectorAll('.preset-btn');
+    elements.exportFilename = document.getElementById('exportFilename');
+    elements.filenameExtension = document.getElementById('filenameExtension');
+    
+    // Processing Modal - Enhanced
+    elements.processingTitle = document.getElementById('processingTitle');
+    elements.mainProgressFill = document.getElementById('mainProgressFill');
+    elements.mainProgressText = document.getElementById('mainProgressText');
+    elements.mainPhaseName = document.getElementById('mainPhaseName');
+    elements.subProgressFill = document.getElementById('subProgressFill');
+    elements.subProgressText = document.getElementById('subProgressText');
+    elements.subPhaseName = document.getElementById('subPhaseName');
+    elements.currentPhase = document.getElementById('currentPhase');
+    elements.processedInfo = document.getElementById('processedInfo');
+    elements.cancelProcessingBtn = document.getElementById('cancelProcessingBtn');
+    elements.processingETA = document.getElementById('processingETA');
+    elements.processingCPU = document.getElementById('processingCPU');
+    elements.processingMemory = document.getElementById('processingMemory');
 }
 
 // ============================================
@@ -413,7 +456,34 @@ function bindEvents() {
     bindPropertiesEvents();
     
     // Export
-    elements.exportBtn.addEventListener('click', exportVideo);
+    elements.exportBtn.addEventListener('click', showExportSettings);
+    
+    // Export Settings Modal
+    elements.closeExportSettingsModal?.addEventListener('click', hideExportSettings);
+    elements.cancelExportBtn?.addEventListener('click', hideExportSettings);
+    elements.startExportBtn?.addEventListener('click', startExportWithSettings);
+    
+    // Export type toggle
+    elements.exportTypeRadios?.forEach(radio => {
+        radio.addEventListener('change', handleExportTypeChange);
+    });
+    
+    // Format change - update filename extension
+    elements.exportFormat?.addEventListener('change', updateFilenameExtension);
+    elements.exportAudioFormat?.addEventListener('change', updateFilenameExtension);
+    
+    // Quality slider
+    elements.exportQuality?.addEventListener('input', (e) => {
+        elements.qualityValue.textContent = e.target.value;
+    });
+    
+    // Resolution presets
+    elements.presetBtns?.forEach(btn => {
+        btn.addEventListener('click', () => applyResolutionPreset(btn.dataset.scale));
+    });
+    
+    // Cancel processing
+    elements.cancelProcessingBtn?.addEventListener('click', cancelExport);
     
     // Modals
     elements.closeShortcutsModal.addEventListener('click', () => {
@@ -3291,126 +3361,71 @@ async function exportVideo() {
         return;
     }
     
-    elements.processingModal.classList.remove('hidden');
-    updateProcessingProgress(0);
+    // Mark export as active
+    state.exportCancelled = false;
+    state.isExporting = true;
     
-    // Initialize export stats
-    const exportStats = {
-        startTime: Date.now(),
-        lastUpdateTime: Date.now(),
-        lastProgress: 0,
-        estimatedTotalTime: 0,
-        cpuUsage: 0,
-        memoryUsage: 0
+    // Show processing modal
+    elements.processingModal.classList.remove('hidden');
+    
+    // Create progress tracker
+    const progress = new ExportProgressTracker();
+    const statsInterval = setInterval(() => {
+        if (state.isExporting) {
+            updateExportStats(progress);
+        }
+    }, 1000);
+    
+    const settings = state.exportSettings || {
+        type: 'video',
+        format: 'mp4',
+        width: state.previewEngine?.videoWidth || 1920,
+        height: state.previewEngine?.videoHeight || 1080,
+        preset: 'fast',
+        quality: 23
     };
     
-    // Start stats update interval
-    const statsInterval = setInterval(() => {
-        updateExportStats(exportStats);
-    }, 1000);
+    // Define handlers array to track all log handlers for cleanup
+    const activeLogHandlers = [];
     
     try {
         const fetchFile = state.fetchFile;
+        const isAudioOnly = settings.type === 'audio';
         
-        // Get all video clips sorted by track (video2/V2 takes priority over video1/V1)
-        const videoClips = state.clips
-            .filter(c => c.type === 'video' && !c.muted);
+        // Get clips
+        const videoClips = state.clips.filter(c => c.type === 'video' && !c.muted);
+        const audioClips = state.clips.filter(c => c.type === 'audio' && !c.muted);
         
-        // Get all audio clips
-        const audioClips = state.clips
-            .filter(c => c.type === 'audio' && !c.muted);
-        
-        if (videoClips.length === 0) {
+        if (!isAudioOnly && videoClips.length === 0) {
             throw new Error('没有可导出的视频');
         }
         
-        // Calculate total timeline duration
-        const timelineDuration = Math.max(...state.clips.map(c => c.endTime));
-        
-        updateProcessingSubtitle('正在准备素材...');
-        
-        // 先分析时间线，计算可见片段
-        updateProcessingSubtitle('正在分析时间线...');
-        const visibleSegments = computeVisibleSegments(videoClips, timelineDuration);
-        
-        console.log('Visible segments:', visibleSegments.map(s => ({
-            time: `${s.startTime.toFixed(4)}-${s.endTime.toFixed(4)}`,
-            clip: s.clip ? s.clip.name : '(black)',
-            track: s.clip ? s.clip.track : '-',
-            timelineStart: s.clip ? s.clip.startTime.toFixed(4) : '-',
-            timelineEnd: s.clip ? s.clip.endTime.toFixed(4) : '-',
-            srcStart: s.clip ? s.srcStart.toFixed(4) : '-',
-            srcEnd: s.clip ? (s.srcStart + s.duration).toFixed(4) : '-',
-            duration: s.duration.toFixed(4)
-        })));
-        
-        // 收集所有需要的视频文件（原始文件）
-        const projectWidth = state.previewEngine?.videoWidth || 1920;
-        const projectHeight = state.previewEngine?.videoHeight || 1080;
-        const fps = state.previewEngine?.fps || 30;
-        
-        // 创建 segment 到输出文件的映射
-        const segmentFiles = [];
-        
-        // 处理每个可见片段 - 先裁剪再转码，更高效
-        for (let i = 0; i < visibleSegments.length; i++) {
-            const seg = visibleSegments[i];
-            const segFilename = `segment_v${i}.mp4`;
-            
-            if (seg.clip && seg.clip.file) {
-                updateProcessingSubtitle(`正在处理片段 ${i + 1}/${visibleSegments.length}: ${seg.clip.name}...`);
-                
-                // 将原始文件写入虚拟文件系统
-                const rawFilename = `temp_raw_${i}.mp4`;
-                await state.ffmpeg.writeFile(rawFilename, await fetchFile(seg.clip.file));
-                
-                // 使用 -ss 先定位（快速），然后裁剪指定时长，同时转码
-                // 这样只处理需要的部分，而不是整个文件
-                const startTime = seg.srcStart;
-                const duration = seg.duration;
-                
-                await state.ffmpeg.exec([
-                    '-ss', startTime.toFixed(6),      // 先 seek 到起始位置（放在 -i 前更快）
-                    '-t', duration.toFixed(6),         // 只读取指定时长
-                    '-i', rawFilename,                 // 输入文件
-                    '-vf', `scale=${projectWidth}:${projectHeight}:force_original_aspect_ratio=decrease,pad=${projectWidth}:${projectHeight}:(ow-iw)/2:(oh-ih)/2:black,fps=${fps}`,
-                    '-c:v', 'libx264', '-preset', 'fast', '-crf', '23',
-                    '-pix_fmt', 'yuv420p',
-                    '-an',                             // 不要音频（视频片段只取画面）
-                    '-y', segFilename
-                ]);
-                
-                // 删除原始临时文件
-                await state.ffmpeg.deleteFile(rawFilename).catch(() => {});
-                
-                segmentFiles.push(segFilename);
-            } else {
-                // 黑帧 - 生成指定时长的黑帧视频
-                updateProcessingSubtitle(`正在生成黑帧 ${i + 1}/${visibleSegments.length}...`);
-                await state.ffmpeg.exec([
-                    '-f', 'lavfi',
-                    '-i', `color=c=black:s=${projectWidth}x${projectHeight}:r=${fps}:d=${seg.duration}`,
-                    '-c:v', 'libx264', '-t', seg.duration.toFixed(6), '-pix_fmt', 'yuv420p',
-                    '-an',
-                    '-y', segFilename
-                ]);
-                segmentFiles.push(segFilename);
-            }
+        if (isAudioOnly && audioClips.length === 0) {
+            throw new Error('没有可导出的音频');
         }
         
-        // 生成 concat 文件列表
-        const concatLines = segmentFiles.map(f => `file '${f}'`);
-        await state.ffmpeg.writeFile('concat_list.txt', concatLines.join('\n'));
+        const timelineDuration = Math.max(...state.clips.map(c => c.endTime));
+        const fps = state.previewEngine?.fps || 30;
         
-        // 处理音频 - 同样先裁剪再转码
-        const audioInputMap = [];
-        const audioFiles = [];
+        // Phase: PREPARE
+        progress.setPhase('PREPARE');
+        progress.setPhaseProgress(50, '准备素材...');
         
-        // 收集需要处理的音频（包括视频中的音频）
+        if (state.exportCancelled) throw new Error('导出已取消');
+        
+        // Phase: ANALYZE
+        progress.setPhase('ANALYZE');
+        
+        let visibleSegments = [];
+        if (!isAudioOnly) {
+            progress.setPhaseProgress(30, '分析视频时间线...');
+            visibleSegments = computeVisibleSegments(videoClips, timelineDuration);
+            progress.stats.totalSegments = visibleSegments.length;
+        }
+        
+        progress.setPhaseProgress(70, '分析音频时间线...');
         const allAudioSources = [];
-        
-        // 1. 来自视频的音频
-        for (const clip of videoClips) {
+        for (const clip of audioClips) {
             if (clip.file) {
                 allAudioSources.push({
                     clip,
@@ -3421,197 +3436,852 @@ async function exportVideo() {
                 });
             }
         }
+        progress.stats.totalAudio = allAudioSources.length;
+        progress.setPhaseProgress(100, '分析完成');
         
-        // 2. 独立的音频片段
-        for (const clip of audioClips) {
-            if (clip.file && !clip.linkedVideoId) {
-                allAudioSources.push({
-                    clip,
-                    startTime: clip.startTime,
-                    endTime: clip.endTime,
-                    srcStart: clip.srcStart || 0,
-                    duration: clip.endTime - clip.startTime
-                });
+        if (state.exportCancelled) throw new Error('导出已取消');
+        
+        // Phase: PREPROCESS_VIDEO (video only)
+        const segmentFiles = [];
+        
+        if (!isAudioOnly) {
+            progress.setPhase('PREPROCESS_VIDEO');
+            
+            const targetWidth = settings.width;
+            const targetHeight = settings.height;
+            
+            // Calculate total frames to process for accurate progress
+            const totalProcessFrames = visibleSegments.reduce((sum, seg) => sum + seg.duration * fps, 0);
+            let processedFrames = 0;
+            
+            for (let i = 0; i < visibleSegments.length; i++) {
+                if (state.exportCancelled) throw new Error('导出已取消');
+                
+                const seg = visibleSegments[i];
+                const segFilename = `segment_v${i}.mp4`;
+                progress.stats.processedSegments = i + 1;
+                
+                // Calculate total frames for this segment
+                const segmentTotalFrames = seg.duration * fps;
+                
+                if (seg.clip && seg.clip.file) {
+                    const rawFilename = `temp_raw_v${i}.mp4`;
+                    await state.ffmpeg.writeFile(rawFilename, await fetchFile(seg.clip.file));
+                    
+                    const startTime = seg.srcStart;
+                    const duration = seg.duration;
+                    
+                    // Track progress using frame count
+                    let currentSegmentFrames = 0;
+                    
+                    // Parse frame from FFmpeg log output: "frame=  203 fps=1.7 ..."
+                    const videoLogHandler = ({ message }) => {
+                        if (!state.isExporting || !message) return;
+                        const frameMatch = message.match(/frame=\s*(\d+)/);
+                        if (frameMatch) {
+                            const frame = parseInt(frameMatch[1], 10);
+                            currentSegmentFrames = Math.min(segmentTotalFrames, Math.max(0, frame));
+                        }
+                    };
+                    state.ffmpeg.on('log', videoLogHandler);
+                    activeLogHandlers.push(videoLogHandler);
+                    
+                    // Update progress display
+                    const progressInterval = setInterval(() => {
+                        if (!state.isExporting) {
+                            clearInterval(progressInterval);
+                            return;
+                        }
+                        const segmentProgress = segmentTotalFrames > 0 ? (currentSegmentFrames / segmentTotalFrames) * 100 : 0;
+                        const totalProgress = totalProcessFrames > 0 ? ((processedFrames + currentSegmentFrames) / totalProcessFrames) * 100 : 0;
+                        progress.setPhaseProgress(Math.min(99, totalProgress), `处理: ${seg.clip.name} (${Math.round(segmentProgress)}%)`);
+                    }, 100);
+                    
+                    await state.ffmpeg.exec([
+                        '-ss', startTime.toFixed(6),
+                        '-t', duration.toFixed(6),
+                        '-i', rawFilename,
+                        '-vf', `scale=${targetWidth}:${targetHeight}:force_original_aspect_ratio=decrease,pad=${targetWidth}:${targetHeight}:(ow-iw)/2:(oh-ih)/2:black,fps=${fps}`,
+                        '-c:v', 'libx264', '-preset', settings.preset, '-crf', settings.quality.toString(),
+                        '-pix_fmt', 'yuv420p',
+                        '-an',
+                        '-y', segFilename
+                    ]);
+                    
+                    clearInterval(progressInterval);
+                    state.ffmpeg.off('log', videoLogHandler);
+                    const index = activeLogHandlers.indexOf(videoLogHandler);
+                    if (index > -1) activeLogHandlers.splice(index, 1);
+                    await state.ffmpeg.deleteFile(rawFilename).catch(() => {});
+                    segmentFiles.push(segFilename);
+                    processedFrames += segmentTotalFrames;
+                } else {
+                    // For black frames, just increment progress
+                    processedFrames += segmentTotalFrames;
+                    const totalProgress = totalProcessFrames > 0 ? (processedFrames / totalProcessFrames) * 100 : 0;
+                    progress.setPhaseProgress(Math.min(99, totalProgress), '生成黑帧...');
+                    
+                    await state.ffmpeg.exec([
+                        '-f', 'lavfi',
+                        '-i', `color=c=black:s=${targetWidth}x${targetHeight}:r=${fps}:d=${seg.duration}`,
+                        '-c:v', 'libx264', '-t', seg.duration.toFixed(6), '-pix_fmt', 'yuv420p',
+                        '-an',
+                        '-y', segFilename
+                    ]);
+                    segmentFiles.push(segFilename);
+                }
             }
+            
+            // Create concat list
+            const concatLines = segmentFiles.map(f => `file '${f}'`);
+            await state.ffmpeg.writeFile('concat_list.txt', concatLines.join('\n'));
         }
         
-        // 处理每个音频源
+        if (state.exportCancelled) throw new Error('导出已取消');
+        
+        // Phase: PREPROCESS_AUDIO
+        progress.setPhase('PREPROCESS_AUDIO');
+        
+        const audioFiles = [];
+        
+        // Define format configurations
+        const formatConfig = getFormatConfig(settings.format);
+        const audioCodec = formatConfig.audioCodec;
+        const audioExt = formatConfig.ext;
+        const videoCodec = formatConfig.videoCodec;
+        
+        // Calculate total audio samples to process (assuming 48000Hz)
+        const sampleRate = 48000;
+        const totalAudioSamples = allAudioSources.reduce((sum, src) => sum + src.duration * sampleRate, 0);
+        let processedAudioSamples = 0;
+        
         for (let i = 0; i < allAudioSources.length; i++) {
-            const source = allAudioSources[i];
-            const audioFilename = `audio_${i}.aac`;
+            if (state.exportCancelled) throw new Error('导出已取消');
             
-            updateProcessingSubtitle(`正在处理音频 ${i + 1}/${allAudioSources.length}...`);
+            const source = allAudioSources[i];
+            const audioFilename = `audio_${i}.${audioExt}`;
+            progress.stats.processedAudio = i + 1;
+            
+            // Calculate total samples for this audio source
+            const sourceTotalSamples = source.duration * sampleRate;
             
             const rawFilename = `temp_audio_raw_${i}.mp4`;
             await state.ffmpeg.writeFile(rawFilename, await fetchFile(source.clip.file));
             
-            // 裁剪并转码音频
-            await state.ffmpeg.exec([
+            const audioArgs = [
                 '-ss', source.srcStart.toFixed(6),
                 '-t', source.duration.toFixed(6),
                 '-i', rawFilename,
-                '-vn', // 无视频
-                '-c:a', 'aac', '-b:a', '192k', '-ar', '48000', '-ac', '2',
-                '-y', audioFilename
-            ]);
+                '-vn'
+            ];
             
+            // Add codec-specific settings
+            const bitrate = settings.format === 'opus' ? '128k' :
+                           settings.format === 'ogg' ? '192k' :
+                           settings.format === 'wma' ? '192k' : '192k';
+            
+            if (['mp3', 'ogg', 'wma'].includes(settings.format)) {
+                audioArgs.push('-c:a', audioCodec, '-b:a', bitrate, '-ar', '48000', '-ac', '2');
+            } else if (['aac', 'm4a'].includes(settings.format)) {
+                audioArgs.push('-c:a', audioCodec, '-b:a', '192k', '-ar', '48000', '-ac', '2');
+            } else if (settings.format === 'opus') {
+                audioArgs.push('-c:a', audioCodec, '-b:a', '128k', '-ar', '48000', '-ac', '2', '-vbr', 'on');
+            } else if (settings.format === 'flac') {
+                audioArgs.push('-c:a', audioCodec, '-ar', '48000', '-ac', '2');
+            } else { // wav
+                audioArgs.push('-c:a', audioCodec, '-ar', '48000', '-ac', '2');
+            }
+            
+            audioArgs.push('-y', audioFilename);
+            
+            // Track progress using audio frame count (samples)
+            let currentSourceSamples = 0;
+            
+            // Parse frame/size from FFmpeg log output for audio progress
+            const audioLogHandler = ({ message }) => {
+                if (!state.isExporting || !message) return;
+                // For audio, FFmpeg outputs frame= or we can use time= for progress
+                const frameMatch = message.match(/frame=\s*(\d+)/);
+                const timeMatch = message.match(/time=(\d+):(\d+):(\d+\.?\d*)/);
+                if (frameMatch) {
+                    // Use frame number as a proxy for progress (less accurate for audio but better than nothing)
+                    const frame = parseInt(frameMatch[1], 10);
+                    // Estimate samples based on frame number and typical audio frame size (1024 samples)
+                    currentSourceSamples = Math.min(sourceTotalSamples, Math.max(0, frame * 1024));
+                } else if (timeMatch) {
+                    // Parse time=00:00:05.63 format
+                    const hours = parseInt(timeMatch[1], 10);
+                    const minutes = parseInt(timeMatch[2], 10);
+                    const seconds = parseFloat(timeMatch[3]);
+                    const totalSeconds = hours * 3600 + minutes * 60 + seconds;
+                    currentSourceSamples = Math.min(sourceTotalSamples, Math.max(0, totalSeconds * sampleRate));
+                }
+            };
+            state.ffmpeg.on('log', audioLogHandler);
+            activeLogHandlers.push(audioLogHandler);
+            
+            // Update progress display
+            const progressInterval = setInterval(() => {
+                if (!state.isExporting) {
+                    clearInterval(progressInterval);
+                    return;
+                }
+                const sourceProgress = sourceTotalSamples > 0 ? (currentSourceSamples / sourceTotalSamples) * 100 : 0;
+                const totalProgress = totalAudioSamples > 0 ? ((processedAudioSamples + currentSourceSamples) / totalAudioSamples) * 100 : 0;
+                progress.setPhaseProgress(Math.min(99, totalProgress), `处理音频: ${source.clip.name} (${Math.round(sourceProgress)}%)`);
+            }, 100);
+            
+            await state.ffmpeg.exec(audioArgs);
+            
+            clearInterval(progressInterval);
+            state.ffmpeg.off('log', audioLogHandler);
+            const index = activeLogHandlers.indexOf(audioLogHandler);
+            if (index > -1) activeLogHandlers.splice(index, 1);
             await state.ffmpeg.deleteFile(rawFilename).catch(() => {});
             
             audioFiles.push({
                 filename: audioFilename,
                 delayMs: Math.round(source.startTime * 1000)
             });
+            
+            processedAudioSamples += sourceTotalSamples;
         }
         
-        // Set up progress tracking
-        state.ffmpeg.on('progress', ({ progress }) => {
-            const percent = Math.min(100, Math.max(0, Math.round(progress * 100)));
-            const now = Date.now();
-            const elapsed = now - exportStats.startTime;
-            
-            if (percent > 0) {
-                const rate = elapsed / percent;
-                exportStats.estimatedTotalTime = rate * 100;
+        if (state.exportCancelled) throw new Error('导出已取消');
+        
+        // Phase: ENCODE
+        progress.setPhase('ENCODE');
+        progress.setPhaseProgress(10, '构建输出...');
+        
+        // Set up FFmpeg log callback to parse frame/time for accurate progress
+        const encodeTotalFrames = timelineDuration * fps;
+        const encodeTotalSamples = timelineDuration * 48000; // For audio-only
+        let currentEncodeFrames = 0;
+        let currentEncodeTime = 0;
+        
+        const encodeLogHandler = ({ message }) => {
+            if (!state.isExporting || !message) return;
+            // Parse frame from FFmpeg log: "frame=  203 fps=1.7 ..."
+            const frameMatch = message.match(/frame=\s*(\d+)/);
+            const timeMatch = message.match(/time=(\d+):(\d+):(\d+\.?\d*)/);
+            if (frameMatch && !isAudioOnly) {
+                const frame = parseInt(frameMatch[1], 10);
+                currentEncodeFrames = Math.min(encodeTotalFrames, Math.max(0, frame));
+                const encodePercent = encodeTotalFrames > 0 ? (currentEncodeFrames / encodeTotalFrames) * 100 : 0;
+                // Scale to 10-95% of the encode phase
+                const phaseProgress = 10 + (encodePercent * 0.85);
+                progress.setPhaseProgress(Math.min(95, phaseProgress), `编码中... ${Math.round(encodePercent)}%`);
+            } else if (timeMatch && isAudioOnly) {
+                // For audio-only, use time= to calculate progress
+                const hours = parseInt(timeMatch[1], 10);
+                const minutes = parseInt(timeMatch[2], 10);
+                const seconds = parseFloat(timeMatch[3]);
+                const totalSeconds = hours * 3600 + minutes * 60 + seconds;
+                currentEncodeTime = Math.min(timelineDuration, Math.max(0, totalSeconds));
+                const encodePercent = timelineDuration > 0 ? (currentEncodeTime / timelineDuration) * 100 : 0;
+                const phaseProgress = 10 + (encodePercent * 0.85);
+                progress.setPhaseProgress(Math.min(95, phaseProgress), `编码中... ${Math.round(encodePercent)}%`);
             }
-            
-            exportStats.lastUpdateTime = now;
-            exportStats.lastProgress = percent;
-            
-            updateProcessingProgress(percent);
-            updateProcessingSubtitle(`正在编码视频... ${percent}%`);
-        });
+        };
+        state.ffmpeg.on('log', encodeLogHandler);
+        activeLogHandlers.push(encodeLogHandler);
         
-        // 组合最终命令 - 视频已经预处理完成，只需简单拼接
-        const finalArgs = [];
+        let outputFilename, mimeType, downloadName;
         
-        // 视频输入（通过 concat 协议）- 这是输入 0
-        finalArgs.push('-f', 'concat', '-safe', '0', '-i', 'concat_list.txt');
+        // Determine output filename
+        outputFilename = `output.${formatConfig.ext}`;
+        mimeType = formatConfig.mimeType;
+        downloadName = settings.filename || (isAudioOnly ? `exported_audio.${formatConfig.ext}` : `exported_video.${formatConfig.ext}`);
         
-        // 构建音频过滤器
-        const audioFilterParts = [];
-        const audioStreamNames = [];
-        
-        if (audioFiles.length > 0) {
-            // 音频输入 - 从输入 1 开始
-            audioFiles.forEach((audioFile, index) => {
-                finalArgs.push('-i', audioFile.filename);
-            });
-            
-            // 构建音频过滤器
-            // 输入 0 是 concat（视频），音频输入从 1 开始
-            audioFiles.forEach((audioFile, index) => {
-                const audioInputIdx = index + 1;
-                const delayMs = audioFile.delayMs;
-                const outputName = `a${audioInputIdx}`;
+        if (isAudioOnly) {
+            // Audio-only export
+            if (audioFiles.length === 1 && audioFiles[0].delayMs === 0) {
+                // Single audio file without delay - just re-encode
+                const args = ['-i', audioFiles[0].filename, '-c:a', audioCodec];
+                if (['mp3', 'aac', 'ogg', 'wma', 'opus'].includes(settings.format)) {
+                    const bitrate = settings.format === 'opus' ? '128k' : '192k';
+                    args.push('-b:a', bitrate);
+                }
+                args.push('-ar', '48000', '-ac', '2', '-y', outputFilename);
+                await state.ffmpeg.exec(args);
+            } else if (audioFiles.length > 0) {
+                // Mix multiple audio files
+                const filterParts = [];
+                const inputs = audioFiles.map((af, idx) => {
+                    const delayFilter = af.delayMs > 0 ? `adelay=${af.delayMs}|${af.delayMs}:all=1` : 'anull';
+                    return `[${idx}:a]${delayFilter}[a${idx}]`;
+                });
                 
-                // 音频已经预处理完成（裁剪和转码），只需要应用延迟
-                let filter = `[${audioInputIdx}:a]`;
+                filterParts.push(...inputs);
                 
-                if (delayMs > 0) {
-                    filter += `adelay=${delayMs}|${delayMs}:all=1`;
-                } else {
-                    filter += `anull`; // 无操作
+                const mixInputs = audioFiles.map((_, idx) => `[a${idx}]`).join('');
+                filterParts.push(`${mixInputs}amix=inputs=${audioFiles.length}:duration=longest[aout]`);
+                
+                const finalArgs = [];
+                audioFiles.forEach(af => finalArgs.push('-i', af.filename));
+                finalArgs.push('-filter_complex', filterParts.join(';'));
+                finalArgs.push('-map', '[aout]');
+                finalArgs.push('-c:a', audioCodec);
+                
+                if (['mp3', 'aac', 'ogg', 'wma'].includes(settings.format)) {
+                    finalArgs.push('-b:a', settings.format === 'ogg' ? '192k' : '192k');
+                } else if (settings.format === 'opus') {
+                    finalArgs.push('-b:a', '128k', '-vbr', 'on');
                 }
                 
-                filter += `[${outputName}]`;
-                audioFilterParts.push(filter);
-                audioStreamNames.push(outputName);
-            });
-            
-            // 混音
-            if (audioStreamNames.length === 1) {
-                audioFilterParts.push(`[${audioStreamNames[0]}]aformat=sample_fmts=fltp:sample_rates=48000:channel_layouts=stereo[audio]`);
-            } else if (audioStreamNames.length > 1) {
-                const audioInputs = audioStreamNames.map(n => `[${n}]`).join('');
-                audioFilterParts.push(`${audioInputs}amix=inputs=${audioStreamNames.length}:duration=longest:dropout_transition=3[aformat]`);
-                audioFilterParts.push(`[aformat]aformat=sample_fmts=fltp:sample_rates=48000:channel_layouts=stereo[audio]`);
+                finalArgs.push('-ar', '48000', '-ac', '2', '-y', outputFilename);
+                await state.ffmpeg.exec(finalArgs);
             }
-        }
-        
-        // 音频过滤器
-        if (audioFilterParts.length > 0 && audioStreamNames.length > 0) {
-            finalArgs.push('-filter_complex', audioFilterParts.join(';'));
-            finalArgs.push('-map', '0:v'); // 视频来自 concat
-            finalArgs.push('-map', '[audio]'); // 音频来自 filter_complex
+        } else if (settings.format === 'gif') {
+            // GIF export - special handling
+            const finalArgs = ['-f', 'concat', '-safe', '0', '-i', 'concat_list.txt'];
+            finalArgs.push('-vf', 'fps=30,scale=480:-1:flags=lanczos,split[s0][s1];[s0]palettegen=max_colors=128[p];[s1][p]paletteuse=dither=bayer');
+            finalArgs.push('-loop', '0');
+            finalArgs.push('-y', outputFilename);
+            await state.ffmpeg.exec(finalArgs);
         } else {
-            // 没有音频
-            finalArgs.push('-map', '0:v');
-            finalArgs.push('-an');
+            // Video export
+            const finalArgs = ['-f', 'concat', '-safe', '0', '-i', 'concat_list.txt'];
+            
+            // Add audio inputs and filters
+            const audioFilterParts = [];
+            const audioStreamNames = [];
+            
+            if (audioFiles.length > 0) {
+                audioFiles.forEach((af, idx) => finalArgs.push('-i', af.filename));
+                
+                audioFiles.forEach((af, idx) => {
+                    const audioInputIdx = idx + 1;
+                    const delayMs = af.delayMs;
+                    const outputName = `a${audioInputIdx}`;
+                    
+                    let filter = `[${audioInputIdx}:a]`;
+                    if (delayMs > 0) {
+                        filter += `adelay=${delayMs}|${delayMs}:all=1`;
+                    } else {
+                        filter += `anull`;
+                    }
+                    filter += `[${outputName}]`;
+                    audioFilterParts.push(filter);
+                    audioStreamNames.push(outputName);
+                });
+                
+                if (audioStreamNames.length === 1) {
+                    const audioCodecArg = formatConfig.audioCodec || 'aac';
+                    audioFilterParts.push(`[${audioStreamNames[0]}]aformat=sample_fmts=fltp:sample_rates=48000:channel_layouts=stereo[audio]`);
+                } else if (audioStreamNames.length > 1) {
+                    const inputs = audioStreamNames.map(n => `[${n}]`).join('');
+                    audioFilterParts.push(`${inputs}amix=inputs=${audioStreamNames.length}:duration=longest:dropout_transition=3[aformat]`);
+                    audioFilterParts.push(`[aformat]aformat=sample_fmts=fltp:sample_rates=48000:channel_layouts=stereo[audio]`);
+                }
+            }
+            
+            if (audioFilterParts.length > 0 && audioStreamNames.length > 0) {
+                finalArgs.push('-filter_complex', audioFilterParts.join(';'));
+                finalArgs.push('-map', '0:v');
+                finalArgs.push('-map', '[audio]');
+            } else {
+                finalArgs.push('-map', '0:v');
+                finalArgs.push('-an');
+            }
+            
+            // Video codec settings
+            finalArgs.push('-c:v', videoCodec);
+            
+            // Add quality/preset settings for supported codecs
+            if (['libx264', 'libx265', 'libvpx', 'libvpx-vp9'].includes(videoCodec)) {
+                if (settings.preset) {
+                    finalArgs.push('-preset', settings.preset);
+                }
+                if (settings.quality && videoCodec !== 'libvpx' && videoCodec !== 'libvpx-vp9') {
+                    finalArgs.push('-crf', settings.quality.toString());
+                }
+            }
+            
+            // Add extra codec-specific args
+            if (formatConfig.extraArgs) {
+                finalArgs.push(...formatConfig.extraArgs);
+            }
+            
+            // Audio codec
+            if (formatConfig.audioCodec) {
+                finalArgs.push('-c:a', formatConfig.audioCodec);
+                
+                // Audio bitrate for lossy codecs
+                if (['aac', 'libmp3lame', 'libvorbis', 'wmav2'].includes(formatConfig.audioCodec)) {
+                    finalArgs.push('-b:a', '192k');
+                }
+            }
+            
+            finalArgs.push('-t', timelineDuration.toString());
+            
+            if (formatConfig.pixFmt) {
+                finalArgs.push('-pix_fmt', formatConfig.pixFmt);
+            }
+            
+            finalArgs.push('-y', outputFilename);
+            
+            await state.ffmpeg.exec(finalArgs);
         }
         
-        // 编码设置 - 视频已经编码完成，使用 copy 或重新编码都可以
-        // 由于视频已经统一格式，可以直接 copy 以提高速度
-        finalArgs.push('-c:v', 'copy');
-        finalArgs.push('-c:a', 'aac', '-b:a', '192k');
-        finalArgs.push('-t', timelineDuration.toString());
-        finalArgs.push('-pix_fmt', 'yuv420p');
-        finalArgs.push('-y', 'output.mp4');
+        if (state.exportCancelled) throw new Error('导出已取消');
         
-        console.log('FFmpeg args:', finalArgs.join(' '));
+        // Phase: FINALIZE
+        progress.setPhase('FINALIZE');
+        progress.setPhaseProgress(50, '读取输出文件...');
         
-        updateProcessingSubtitle('正在编码视频...');
-        await state.ffmpeg.exec(finalArgs);
-        
-        updateProcessingSubtitle('正在读取输出文件...');
-        updateProcessingProgress(95);
-        
-        const data = await state.ffmpeg.readFile('output.mp4');
-        const blob = new Blob([data.buffer], { type: 'video/mp4' });
+        const data = await state.ffmpeg.readFile(outputFilename);
+        const blob = new Blob([data.buffer], { type: mimeType });
         const url = URL.createObjectURL(blob);
         
-        updateProcessingSubtitle('正在下载...');
-        updateProcessingProgress(98);
+        progress.setPhaseProgress(80, '下载中...');
         
         const a = document.createElement('a');
         a.href = url;
-        a.download = 'exported_video.mp4';
+        a.download = downloadName;
         a.click();
         URL.revokeObjectURL(url);
         
+        // Remove all active log handlers
+        activeLogHandlers.forEach(handler => {
+            state.ffmpeg.off('log', handler);
+        });
+        
+        progress.complete();
+        clearInterval(statsInterval);
+        state.isExporting = false;
+        
         // Cleanup
-        // 删除视频片段文件
         for (const file of segmentFiles) {
             await state.ffmpeg.deleteFile(file).catch(() => {});
         }
-        // 删除音频文件
-        for (const audioFile of audioFiles) {
-            await state.ffmpeg.deleteFile(audioFile.filename).catch(() => {});
+        for (const af of audioFiles) {
+            await state.ffmpeg.deleteFile(af.filename).catch(() => {});
         }
-        await state.ffmpeg.deleteFile('output.mp4').catch(() => {});
+        await state.ffmpeg.deleteFile(outputFilename).catch(() => {});
         await state.ffmpeg.deleteFile('concat_list.txt').catch(() => {});
-        
-        updateProcessingProgress(100);
-        clearInterval(statsInterval);
         
         setTimeout(() => {
             elements.processingModal.classList.add('hidden');
-            showToast('导出成功', 'success');
-        }, 300);
+            showToast(isAudioOnly ? '音频导出成功' : '视频导出成功', 'success');
+        }, 500);
         
     } catch (error) {
-        console.error('Export error:', error);
+        // Make sure to remove all log handlers on error
+        activeLogHandlers.forEach(handler => {
+            state.ffmpeg.off('log', handler);
+        });
         clearInterval(statsInterval);
+        state.isExporting = false;
+        
         elements.processingModal.classList.add('hidden');
-        showToast('导出失败: ' + error.message, 'error');
+        
+        if (error.message === '导出已取消') {
+            showToast('导出已取消', 'info');
+            // Cleanup cancelled export files
+            await cleanupExportFiles(state.ffmpeg);
+        } else {
+            console.error('Export error:', error);
+            showToast('导出失败: ' + error.message, 'error');
+        }
     }
 }
 
-function updateProcessingProgress(percent) {
-    elements.processingProgress.style.width = `${percent}%`;
-    elements.processingStatus.textContent = `${percent}%`;
-}
-
-function updateProcessingSubtitle(text) {
-    const subtitle = document.getElementById('processingSubtitle');
-    if (subtitle) {
-        subtitle.textContent = text;
+async function cleanupExportFiles(ffmpeg) {
+    try {
+        // Clean up temp files
+        for (let i = 0; i < 100; i++) {
+            await ffmpeg.deleteFile(`segment_v${i}.mp4`).catch(() => {});
+            await ffmpeg.deleteFile(`temp_raw_v${i}.mp4`).catch(() => {});
+            await ffmpeg.deleteFile(`audio_${i}.aac`).catch(() => {});
+            await ffmpeg.deleteFile(`audio_${i}.mp3`).catch(() => {});
+            await ffmpeg.deleteFile(`audio_${i}.wav`).catch(() => {});
+            await ffmpeg.deleteFile(`audio_${i}.flac`).catch(() => {});
+            await ffmpeg.deleteFile(`audio_${i}.ogg`).catch(() => {});
+            await ffmpeg.deleteFile(`audio_${i}.opus`).catch(() => {});
+            await ffmpeg.deleteFile(`audio_${i}.wma`).catch(() => {});
+            await ffmpeg.deleteFile(`audio_${i}.m4a`).catch(() => {});
+            await ffmpeg.deleteFile(`temp_audio_raw_${i}.mp4`).catch(() => {});
+        }
+        await ffmpeg.deleteFile('concat_list.txt').catch(() => {});
+        
+        // Clean up output files with all supported extensions
+        const extensions = ['mp4', 'mp3', 'aac', 'wav', 'flac', 'ogg', 'opus', 'wma', 'm4a', 
+                           'webm', 'mov', 'avi', 'mkv', 'gif'];
+        for (const ext of extensions) {
+            await ffmpeg.deleteFile(`output.${ext}`).catch(() => {});
+        }
+    } catch (e) {
+        // Ignore cleanup errors
     }
 }
 
-function updateExportStats(stats) {
+// ============================================
+// Export Settings Dialog
+// ============================================
+function showExportSettings() {
+    if (state.clips.length === 0) {
+        showToast('请先加载视频', 'error');
+        return;
+    }
+    
+    if (!state.loaded || !state.ffmpeg) {
+        showToast('FFmpeg 未加载，无法导出', 'error');
+        return;
+    }
+    
+    // Get original video dimensions
+    const originalWidth = state.previewEngine?.videoWidth || 1920;
+    const originalHeight = state.previewEngine?.videoHeight || 1080;
+    state.originalVideoDimensions = { width: originalWidth, height: originalHeight };
+    
+    // Update resolution inputs
+    elements.exportWidth.value = originalWidth;
+    elements.exportHeight.value = originalHeight;
+    elements.originalResolution.textContent = `${originalWidth}×${originalHeight}`;
+    
+    // Reset to defaults
+    elements.exportTypeRadios[0].checked = true;
+    elements.exportFormat.value = 'mp4';
+    elements.exportAudioFormat.value = 'aac';
+    elements.exportPreset.value = 'fast';
+    elements.exportQuality.value = 23;
+    elements.qualityValue.textContent = '23';
+    
+    // Reset preset buttons
+    elements.presetBtns.forEach(btn => btn.classList.remove('active'));
+    elements.presetBtns[1].classList.add('active'); // 1x
+    
+    // Update UI visibility
+    handleExportTypeChange();
+    
+    elements.exportSettingsModal.classList.remove('hidden');
+}
+
+function hideExportSettings() {
+    elements.exportSettingsModal.classList.add('hidden');
+}
+
+function handleExportTypeChange() {
+    const exportType = document.querySelector('input[name="exportType"]:checked')?.value || 'video';
+    const isVideo = exportType === 'video';
+    
+    elements.videoFormatGroup?.classList.toggle('hidden', !isVideo);
+    elements.audioFormatGroup?.classList.toggle('hidden', isVideo);
+    elements.resolutionGroup?.classList.toggle('hidden', !isVideo);
+    elements.presetGroup?.classList.toggle('hidden', !isVideo);
+    
+    // Update dialog title
+    const title = elements.exportSettingsModal?.querySelector('h3');
+    if (title) {
+        title.textContent = isVideo ? (I18N.t('videoEditor.exportSettings.title') || '导出设置') : (I18N.t('videoEditor.exportSettings.audioTitle') || '导出音频设置');
+    }
+    
+    // Update filename extension
+    updateFilenameExtension();
+}
+
+function updateFilenameExtension() {
+    const exportType = document.querySelector('input[name="exportType"]:checked')?.value || 'video';
+    const format = exportType === 'video' ? elements.exportFormat?.value : elements.exportAudioFormat?.value;
+    
+    const extMap = {
+        // Video formats
+        'mp4': '.mp4',
+        'mp4-hevc': '.mp4',
+        'webm': '.webm',
+        'webm-vp8': '.webm',
+        'mov': '.mov',
+        'avi': '.avi',
+        'mkv': '.mkv',
+        'gif': '.gif',
+        // Audio formats
+        'mp3': '.mp3',
+        'aac': '.m4a',
+        'ogg': '.ogg',
+        'opus': '.opus',
+        'wav': '.wav',
+        'flac': '.flac',
+        'wma': '.wma'
+    };
+    
+    if (elements.filenameExtension) {
+        elements.filenameExtension.textContent = extMap[format] || '.mp4';
+    }
+}
+
+// ============================================
+// Format Configuration
+// ============================================
+function getFormatConfig(format) {
+    const configs = {
+        // Video formats
+        'mp4': { 
+            ext: 'mp4', 
+            videoCodec: 'libx264', 
+            audioCodec: 'aac',
+            mimeType: 'video/mp4',
+            pixFmt: 'yuv420p'
+        },
+        'mp4-hevc': { 
+            ext: 'mp4', 
+            videoCodec: 'libx265', 
+            audioCodec: 'aac',
+            mimeType: 'video/mp4',
+            pixFmt: 'yuv420p',
+            extraArgs: ['-tag:v', 'hvc1']
+        },
+        'webm': { 
+            ext: 'webm', 
+            videoCodec: 'libvpx-vp9', 
+            audioCodec: 'libopus',
+            mimeType: 'video/webm',
+            pixFmt: 'yuv420p'
+        },
+        'webm-vp8': { 
+            ext: 'webm', 
+            videoCodec: 'libvpx', 
+            audioCodec: 'libvorbis',
+            mimeType: 'video/webm',
+            pixFmt: 'yuv420p'
+        },
+        'mov': { 
+            ext: 'mov', 
+            videoCodec: 'prores_ks', 
+            audioCodec: 'pcm_s16le',
+            mimeType: 'video/quicktime',
+            pixFmt: 'yuv422p10le',
+            extraArgs: ['-profile:v', '2']
+        },
+        'avi': { 
+            ext: 'avi', 
+            videoCodec: 'mpeg4', 
+            audioCodec: 'libmp3lame',
+            mimeType: 'video/x-msvideo',
+            pixFmt: 'yuv420p'
+        },
+        'mkv': { 
+            ext: 'mkv', 
+            videoCodec: 'libx264', 
+            audioCodec: 'aac',
+            mimeType: 'video/x-matroska',
+            pixFmt: 'yuv420p'
+        },
+        'gif': { 
+            ext: 'gif', 
+            videoCodec: 'gif', 
+            audioCodec: null,
+            mimeType: 'image/gif',
+            pixFmt: 'rgb8'
+        },
+        // Audio formats
+        'mp3': { 
+            ext: 'mp3', 
+            videoCodec: null, 
+            audioCodec: 'libmp3lame',
+            mimeType: 'audio/mpeg',
+            pixFmt: null
+        },
+        'aac': { 
+            ext: 'm4a', 
+            videoCodec: null, 
+            audioCodec: 'aac',
+            mimeType: 'audio/mp4',
+            pixFmt: null
+        },
+        'ogg': { 
+            ext: 'ogg', 
+            videoCodec: null, 
+            audioCodec: 'libvorbis',
+            mimeType: 'audio/ogg',
+            pixFmt: null
+        },
+        'opus': { 
+            ext: 'opus', 
+            videoCodec: null, 
+            audioCodec: 'libopus',
+            mimeType: 'audio/opus',
+            pixFmt: null
+        },
+        'wav': { 
+            ext: 'wav', 
+            videoCodec: null, 
+            audioCodec: 'pcm_s16le',
+            mimeType: 'audio/wav',
+            pixFmt: null
+        },
+        'flac': { 
+            ext: 'flac', 
+            videoCodec: null, 
+            audioCodec: 'flac',
+            mimeType: 'audio/flac',
+            pixFmt: null
+        },
+        'wma': { 
+            ext: 'wma', 
+            videoCodec: null, 
+            audioCodec: 'wmav2',
+            mimeType: 'audio/x-ms-wma',
+            pixFmt: null
+        }
+    };
+    
+    return configs[format] || configs['mp4'];
+}
+
+function applyResolutionPreset(scale) {
+    const scaleFactor = parseFloat(scale);
+    const originalWidth = state.originalVideoDimensions.width;
+    const originalHeight = state.originalVideoDimensions.height;
+    
+    elements.exportWidth.value = Math.round(originalWidth * scaleFactor);
+    elements.exportHeight.value = Math.round(originalHeight * scaleFactor);
+    
+    // Update active state
+    elements.presetBtns.forEach(btn => btn.classList.remove('active'));
+    event.target.classList.add('active');
+}
+
+async function startExportWithSettings() {
+    const exportType = document.querySelector('input[name="exportType"]:checked')?.value || 'video';
+    const format = exportType === 'video' ? elements.exportFormat.value : elements.exportAudioFormat.value;
+    
+    // Get custom filename or use default
+    let customFilename = elements.exportFilename?.value?.trim();
+    if (!customFilename) {
+        customFilename = exportType === 'video' ? 'exported_video' : 'exported_audio';
+    }
+    
+    // Get extension
+    const extMap = {
+        'mp4': '.mp4', 'mp4-hevc': '.mp4', 'webm': '.webm', 'webm-vp8': '.webm',
+        'mov': '.mov', 'avi': '.avi', 'mkv': '.mkv', 'gif': '.gif',
+        'mp3': '.mp3', 'aac': '.m4a', 'ogg': '.ogg', 'opus': '.opus',
+        'wav': '.wav', 'flac': '.flac', 'wma': '.wma'
+    };
+    const extension = extMap[format] || '.mp4';
+    
+    state.exportSettings = {
+        type: exportType,
+        format: format,
+        width: parseInt(elements.exportWidth.value) || 1920,
+        height: parseInt(elements.exportHeight.value) || 1080,
+        preset: elements.exportPreset.value,
+        quality: parseInt(elements.exportQuality.value) || 23,
+        filename: customFilename + extension
+    };
+    
+    hideExportSettings();
+    await exportVideo();
+}
+
+function cancelExport() {
+    state.exportCancelled = true;
+}
+
+// ============================================
+// Enhanced Progress Tracking
+// ============================================
+class ExportProgressTracker {
+    constructor() {
+        this.phases = {
+            PREPARE: { name: '准备中', weight: 5 },
+            ANALYZE: { name: '分析时间线', weight: 5 },
+            PREPROCESS_VIDEO: { name: '预处理视频', weight: 40 },
+            PREPROCESS_AUDIO: { name: '预处理音频', weight: 25 },
+            ENCODE: { name: '编码输出', weight: 20 },
+            FINALIZE: { name: '完成', weight: 5 }
+        };
+        this.currentPhase = null;
+        this.completedPhases = new Set();
+        this.phaseProgress = 0;
+        this.overallProgress = 0;
+        this.startTime = Date.now();
+        this.stats = {
+            processedSegments: 0,
+            totalSegments: 0,
+            processedAudio: 0,
+            totalAudio: 0
+        };
+    }
+    
+    setPhase(phaseKey) {
+        // Mark previous phase as completed if exists
+        if (this.currentPhase && !this.completedPhases.has(this.currentPhase)) {
+            this.completedPhases.add(this.currentPhase);
+            this.overallProgress += this.phases[this.currentPhase].weight;
+        }
+        
+        // If this phase was already completed, don't add weight again
+        if (this.completedPhases.has(phaseKey)) {
+            this.currentPhase = phaseKey;
+            this.phaseProgress = 100;
+        } else {
+            this.currentPhase = phaseKey;
+            this.phaseProgress = 0;
+        }
+        
+        this.updateUI();
+    }
+    
+    setPhaseProgress(percent, subInfo = '') {
+        this.phaseProgress = Math.min(100, Math.max(0, percent));
+        this.updateUI(subInfo);
+    }
+    
+    updateUI(subInfo = '') {
+        if (!this.currentPhase || !this.phases[this.currentPhase]) return;
+        
+        const phase = this.phases[this.currentPhase];
+        const phaseWeight = phase.weight;
+        const phaseContribution = (this.phaseProgress / 100) * phaseWeight;
+        const totalProgress = Math.min(100, Math.round(this.overallProgress + phaseContribution));
+        
+        // Update main progress
+        if (elements.mainProgressFill) elements.mainProgressFill.style.width = `${totalProgress}%`;
+        if (elements.mainProgressText) elements.mainProgressText.textContent = `${totalProgress}%`;
+        if (elements.mainPhaseName) elements.mainPhaseName.textContent = phase.name;
+        
+        // Update sub progress
+        if (elements.subProgressFill) elements.subProgressFill.style.width = `${this.phaseProgress}%`;
+        if (elements.subProgressText) elements.subProgressText.textContent = `${Math.round(this.phaseProgress)}%`;
+        if (elements.subPhaseName) elements.subPhaseName.textContent = subInfo || phase.name;
+        
+        // Update details
+        if (elements.currentPhase) elements.currentPhase.textContent = phase.name;
+        if (elements.processedInfo) elements.processedInfo.textContent = this.getProcessedInfo();
+        
+        // Update title
+        if (elements.processingTitle) elements.processingTitle.textContent = `${phase.name}...`;
+    }
+    
+    getProcessedInfo() {
+        switch (this.currentPhase) {
+            case 'PREPROCESS_VIDEO':
+                return `${this.stats.processedSegments}/${this.stats.totalSegments} 片段`;
+            case 'PREPROCESS_AUDIO':
+                return `${this.stats.processedAudio}/${this.stats.totalAudio} 音轨`;
+            default:
+                return '--';
+        }
+    }
+    
+    complete() {
+        this.overallProgress = 100;
+        this.phaseProgress = 100;
+        this.updateUI('完成');
+    }
+}
+
+function updateExportStats(tracker) {
+    if (!tracker || !tracker.currentPhase) return;
+    
     const now = Date.now();
-    const elapsed = now - stats.startTime;
-    const progress = stats.lastProgress;
+    const elapsed = now - tracker.startTime;
+    const currentPhaseConfig = tracker.phases[tracker.currentPhase];
+    if (!currentPhaseConfig) return;
+    
+    const progress = tracker.overallProgress + (tracker.phaseProgress / 100) * currentPhaseConfig.weight;
     
     // Calculate ETA
     let etaText = '--:--';
@@ -3623,26 +4293,20 @@ function updateExportStats(stats) {
         etaText = '00:00';
     }
     
-    // Simulate CPU usage (since we can't get real CPU in browser)
-    // Use a combination of elapsed time and progress to create realistic-looking variation
+    // Simulate CPU usage
     const cpuBase = 40 + Math.sin(now / 2000) * 20;
     const cpuSpike = (progress > 0 && progress < 100) ? Math.random() * 30 : 0;
     const cpuUsage = Math.min(95, Math.round(cpuBase + cpuSpike));
     
-    // Estimate memory usage based on file processing
-    // This is simulated as we don't have direct access to FFmpeg's memory in browser
+    // Estimate memory usage
     const memoryBase = 150;
     const memoryVar = Math.random() * 50;
     const memoryUsage = Math.round(memoryBase + memoryVar);
     
     // Update display
-    const etaEl = document.getElementById('processingETA');
-    const cpuEl = document.getElementById('processingCPU');
-    const memEl = document.getElementById('processingMemory');
-    
-    if (etaEl) etaEl.textContent = etaText;
-    if (cpuEl) cpuEl.textContent = `${cpuUsage}%`;
-    if (memEl) memEl.textContent = `${memoryUsage} MB`;
+    if (elements.processingETA) elements.processingETA.textContent = etaText;
+    if (elements.processingCPU) elements.processingCPU.textContent = `${cpuUsage}%`;
+    if (elements.processingMemory) elements.processingMemory.textContent = `${memoryUsage} MB`;
 }
 
 function formatDuration(ms) {

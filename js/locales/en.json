@@ -822,11 +822,34 @@
       "audioTrack2": "Audio 2"
     },
     "processing": {
-      "title": "Exporting Video...",
+      "title": "Exporting...",
       "subtitle": "Processing video",
       "eta": "ETA",
       "cpu": "CPU",
-      "memory": "Memory"
+      "memory": "Memory",
+      "cancel": "Cancel Export",
+      "phase": "Current Phase",
+      "processed": "Processed",
+      "initializing": "Initializing",
+      "preparing": "Preparing...",
+      "analyzing": "Analyzing timeline..."
+    },
+    "exportSettings": {
+      "title": "Export Settings",
+      "audioTitle": "Export Audio Settings",
+      "exportType": "Export Type",
+      "video": "Video",
+      "audioOnly": "Audio Only",
+      "format": "Format",
+      "audioFormat": "Audio Format",
+      "resolution": "Resolution",
+      "originalResolution": "Original Resolution",
+      "preset": "Encoding Speed",
+      "quality": "Quality (CRF)",
+      "cancel": "Cancel",
+      "startExport": "Start Export",
+      "filename": "Filename",
+      "filenameHint": "Leave empty for default name"
     },
     "shortcuts": {
       "title": "Keyboard Shortcuts",
