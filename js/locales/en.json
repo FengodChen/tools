@@ -822,8 +822,11 @@
       "audioTrack2": "Audio 2"
     },
     "processing": {
-      "title": "Processing Video...",
-      "subtitle": "Please wait, processing with FFmpeg"
+      "title": "Exporting Video...",
+      "subtitle": "Processing video",
+      "eta": "ETA",
+      "cpu": "CPU",
+      "memory": "Memory"
     },
     "shortcuts": {
       "title": "Keyboard Shortcuts",

@@ -559,6 +559,21 @@ export class PreviewEngine {
             }
         }
         
+        // Collect active video clip IDs for pausing inactive videos
+        const activeVideoClipIds = new Set();
+        for (const layer of layers) {
+            if (layer.track_index < 2) { // Video tracks only
+                activeVideoClipIds.add(layer.clip_id);
+            }
+        }
+        
+        // Pause video elements that are no longer active
+        this.videoElements.forEach((video, clipId) => {
+            if (!activeVideoClipIds.has(clipId) && !video.paused) {
+                video.pause();
+            }
+        });
+        
         // Sync all video elements and find active one for rendering
         for (const layer of layers) {
             if (layer.track_index >= 2) continue; // Skip audio tracks
@@ -569,14 +584,17 @@ export class PreviewEngine {
             const targetTime = layer.source_time;
             const timeDiff = Math.abs(video.currentTime - targetTime);
             
-            // Only seek if time difference is large (> 1 second for smooth playback)
-            if (timeDiff > 1.0 && !video.seeking) {
+            // Seek to target time if difference is significant
+            if (timeDiff > 0.1 && !video.seeking) {
                 video.currentTime = targetTime;
             }
             
-            // Track the active video for rendering
+            // Ensure active video is playing for smooth frame updates
             if (layer === activeVideoLayer) {
                 activeVideo = video;
+                if (video.paused) {
+                    video.play().catch(() => {});
+                }
             }
         }
         
@@ -587,17 +605,9 @@ export class PreviewEngine {
                 return;
             }
             
-            // Use requestVideoFrameCallback for frame-accurate rendering if available
-            if (activeVideo.requestVideoFrameCallback) {
-                activeVideo.requestVideoFrameCallback((now, metadata) => {
-                    if (this.isPlaying) {
-                        this.drawVideoFrame(activeVideo, activeVideoLayer.opacity);
-                    }
-                });
-            } else {
-                // Fallback: draw immediately
-                this.drawVideoFrame(activeVideo, activeVideoLayer.opacity);
-            }
+            // Draw immediately - requestVideoFrameCallback can cause issues
+            // when switching between clips on different tracks
+            this.drawVideoFrame(activeVideo, activeVideoLayer.opacity);
         } else {
             // No video to display - clear to black
             this.clearCanvas();
@@ -629,6 +639,21 @@ export class PreviewEngine {
                 }
             }
         }
+        
+        // Collect active video clip IDs for pausing inactive videos
+        const activeVideoClipIds = new Set();
+        for (const layer of layers) {
+            if (layer.track_index < 2) { // Video tracks only
+                activeVideoClipIds.add(layer.clip_id);
+            }
+        }
+        
+        // Pause video elements that are no longer active
+        this.videoElements.forEach((video, clipId) => {
+            if (!activeVideoClipIds.has(clipId) && !video.paused) {
+                video.pause();
+            }
+        });
         
         // Sync all video elements and find active one for rendering
         for (const layer of layers) {
@@ -720,6 +745,21 @@ export class PreviewEngine {
                 }
             }
         }
+        
+        // Collect active video clip IDs for pausing inactive videos
+        const activeVideoClipIds = new Set();
+        for (const layer of layers) {
+            if (layer.track_index < 2) { // Video tracks only
+                activeVideoClipIds.add(layer.clip_id);
+            }
+        }
+        
+        // Pause video elements that are no longer active
+        this.videoElements.forEach((video, clipId) => {
+            if (!activeVideoClipIds.has(clipId) && !video.paused) {
+                video.pause();
+            }
+        });
         
         if (activeVideoLayer) {
             const video = this.videoElements.get(activeVideoLayer.clip_id);

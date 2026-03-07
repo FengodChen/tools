@@ -822,8 +822,11 @@
       "audioTrack2": "音频 2"
     },
     "processing": {
-      "title": "正在处理视频...",
-      "subtitle": "请稍候，正在使用 FFmpeg 处理"
+      "title": "正在导出视频...",
+      "subtitle": "正在处理视频",
+      "eta": "预计剩余时间",
+      "cpu": "CPU",
+      "memory": "内存"
     },
     "shortcuts": {
       "title": "键盘快捷键",

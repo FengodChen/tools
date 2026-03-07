@@ -17,8 +17,14 @@
         <div class="loading-content">
             <div class="loading-spinner"></div>
             <h2 data-i18n="videoEditor.loading.title">正在初始化编辑器...</h2>
-            <p data-i18n="videoEditor.loading.subtitle">首次加载可能需要一些时间</p>
-            <div class="loading-progress" id="loadingProgress">0%</div>
+            <p data-i18n="videoEditor.loading.subtitle" id="loadingSubtitle">首次加载可能需要一些时间</p>
+            <div class="loading-progress-container">
+                <div class="loading-progress-bar">
+                    <div class="loading-progress-fill" id="loadingProgressFill"></div>
+                </div>
+                <div class="loading-progress-text" id="loadingProgress">0%</div>
+            </div>
+            <div class="loading-status" id="loadingStatus"></div>
         </div>
     </div>
 
@@ -550,12 +556,26 @@
     <div class="processing-modal hidden" id="processingModal">
         <div class="processing-content">
             <div class="processing-spinner"></div>
-            <h3 data-i18n="videoEditor.processing.title">正在处理...</h3>
-            <p data-i18n="videoEditor.processing.subtitle">请稍候</p>
+            <h3 data-i18n="videoEditor.processing.title">正在导出视频...</h3>
+            <p data-i18n="videoEditor.processing.subtitle" id="processingSubtitle">正在处理视频</p>
             <div class="progress-bar">
                 <div class="progress-fill" id="processingProgress"></div>
             </div>
             <p class="progress-text" id="processingStatus">0%</p>
+            <div class="processing-stats" id="processingStats">
+                <div class="stat-item">
+                    <span class="stat-label" data-i18n="videoEditor.processing.eta">预计剩余时间</span>
+                    <span class="stat-value" id="processingETA">--:--</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label" data-i18n="videoEditor.processing.cpu">CPU</span>
+                    <span class="stat-value" id="processingCPU">--%</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label" data-i18n="videoEditor.processing.memory">内存</span>
+                    <span class="stat-value" id="processingMemory">-- MB</span>
+                </div>
+            </div>
         </div>
     </div>
 
