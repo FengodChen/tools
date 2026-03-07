@@ -216,6 +216,7 @@ function cacheElements() {
     elements.processingETA = document.getElementById('processingETA');
     elements.processingCPU = document.getElementById('processingCPU');
     elements.processingMemory = document.getElementById('processingMemory');
+    elements.cancelHint = document.getElementById('cancelHint');
 }
 
 // ============================================
@@ -3863,6 +3864,7 @@ async function exportVideo() {
         
         setTimeout(() => {
             elements.processingModal.classList.add('hidden');
+            resetCancelButton();
             showToast(isAudioOnly ? '音频导出成功' : '视频导出成功', 'success');
         }, 500);
         
@@ -3875,6 +3877,7 @@ async function exportVideo() {
         state.isExporting = false;
         
         elements.processingModal.classList.add('hidden');
+        resetCancelButton();
         
         if (error.message === '导出已取消') {
             showToast('导出已取消', 'info');
@@ -4177,6 +4180,57 @@ async function startExportWithSettings() {
 
 function cancelExport() {
     state.exportCancelled = true;
+    
+    // Update UI to show cancellation is in progress
+    const cancelBtn = elements.cancelProcessingBtn;
+    if (cancelBtn) {
+        cancelBtn.disabled = true;
+        cancelBtn.classList.add('cancelling');
+        
+        // Update button text to show waiting state
+        const btnSpan = cancelBtn.querySelector('span');
+        if (btnSpan) {
+            btnSpan.textContent = I18N.t('videoEditor.processing.cancelling') || '正在停止导出...';
+        } else {
+            cancelBtn.textContent = I18N.t('videoEditor.processing.cancelling') || '正在停止导出...';
+        }
+    }
+    
+    // Show cancel hint message
+    if (elements.cancelHint) {
+        elements.cancelHint.classList.remove('hidden');
+    }
+    
+    // Update processing title to indicate cancellation
+    if (elements.processingTitle) {
+        elements.processingTitle.textContent = I18N.t('videoEditor.processing.stopping') || '正在停止...';
+    }
+    
+    // Update sub phase name
+    if (elements.subPhaseName) {
+        elements.subPhaseName.textContent = I18N.t('videoEditor.processing.waiting') || '等待当前操作完成...';
+    }
+}
+
+function resetCancelButton() {
+    const cancelBtn = elements.cancelProcessingBtn;
+    if (cancelBtn) {
+        cancelBtn.disabled = false;
+        cancelBtn.classList.remove('cancelling');
+        
+        // Restore original button text
+        const btnSpan = cancelBtn.querySelector('span');
+        if (btnSpan) {
+            btnSpan.textContent = I18N.t('videoEditor.processing.cancel') || '取消导出';
+        } else {
+            cancelBtn.textContent = I18N.t('videoEditor.processing.cancel') || '取消导出';
+        }
+    }
+    
+    // Hide cancel hint message
+    if (elements.cancelHint) {
+        elements.cancelHint.classList.add('hidden');
+    }
 }
 
 // ============================================
