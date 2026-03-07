@@ -1,0 +1,36 @@
+/* tslint:disable */
+/* eslint-disable */
+export const memory: WebAssembly.Memory;
+export const __wbg_videoeditorengine_free: (a: number, b: number) => void;
+export const videoeditorengine_add_clip: (a: number, b: number, c: number) => [number, number, number];
+export const videoeditorengine_calculate_source_time: (a: number, b: number, c: number) => [number, number];
+export const videoeditorengine_clear: (a: number) => void;
+export const videoeditorengine_configure_preview: (a: number, b: number, c: number, d: number) => void;
+export const videoeditorengine_get_clips_at_time: (a: number, b: number) => [number, number];
+export const videoeditorengine_get_clips_json: (a: number) => [number, number];
+export const videoeditorengine_get_composition_layers: (a: number, b: number) => [number, number];
+export const videoeditorengine_get_duration: (a: number) => number;
+export const videoeditorengine_move_clip: (a: number, b: number, c: number, d: number, e: number) => [number, number];
+export const videoeditorengine_new: () => number;
+export const videoeditorengine_remove_clip: (a: number, b: number) => void;
+export const videoeditorengine_render_frame: (a: number, b: number) => number;
+export const videoeditorengine_resize_clip: (a: number, b: number, c: number, d: number, e: number, f: number) => [number, number];
+export const videoeditorengine_set_preview_canvas: (a: number, b: any) => void;
+export const videoeditorengine_split_clip: (a: number, b: number, c: number) => [number, number, number];
+export const videoeditorengine_update_clip: (a: number, b: number, c: number) => [number, number];
+export const start: () => void;
+export const blend_colors: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number) => [number, number];
+export const calculate_preview_dimensions: (a: number, b: number, c: number, d: number) => [number, number];
+export const create_image_data: (a: number, b: number, c: number, d: number) => [number, number, number];
+export const pixel_to_time: (a: number, b: number) => number;
+export const snap_time: (a: number, b: number) => number;
+export const snap_to_frame: (a: number, b: number) => number;
+export const time_to_pixel: (a: number, b: number) => number;
+export const __wbindgen_free: (a: number, b: number, c: number) => void;
+export const __externref_table_alloc: () => number;
+export const __wbindgen_externrefs: WebAssembly.Table;
+export const __wbindgen_exn_store: (a: number) => void;
+export const __wbindgen_malloc: (a: number, b: number) => number;
+export const __wbindgen_realloc: (a: number, b: number, c: number, d: number) => number;
+export const __externref_table_dealloc: (a: number) => void;
+export const __wbindgen_start: () => void;

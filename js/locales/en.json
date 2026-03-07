@@ -694,21 +694,83 @@
     },
     "buttons": {
       "upload": "Upload Video",
-      "export": "Export Video",
+      "export": "Export",
       "downloadOriginal": "Download Original",
       "setCurrent": "Set Current",
       "preview": "Preview",
       "apply": "Apply",
       "clearAll": "Clear All",
-      "addAudio": "Add Audio File"
+      "addAudio": "Add Audio",
+      "addVideo": "Add Video"
     },
     "upload": {
       "hint": "Supports MP4, MOV, AVI, WebM formats"
     },
-    "tabs": {
+    "menu": {
+      "file": "File",
+      "edit": "Edit",
+      "view": "View",
+      "help": "Help",
+      "newProject": "New Project",
+      "openVideo": "Open Video",
+      "saveProject": "Save Project",
+      "exportVideo": "Export Video",
+      "undo": "Undo",
+      "redo": "Redo",
       "cut": "Cut",
-      "convert": "Convert",
-      "audio": "Audio"
+      "copy": "Copy",
+      "paste": "Paste",
+      "delete": "Delete",
+      "split": "Split Clip",
+      "selectAll": "Select All",
+      "zoomIn": "Zoom In",
+      "zoomOut": "Zoom Out",
+      "fitTimeline": "Fit to Window",
+      "fullscreen": "Fullscreen",
+      "shortcuts": "Keyboard Shortcuts"
+    },
+    "panels": {
+      "project": "Project",
+      "effects": "Effects",
+      "properties": "Properties"
+    },
+    "project": {
+      "videoClips": "Video Clips",
+      "audioClips": "Audio Clips",
+      "noClips": "No clips",
+      "noAudioClips": "No audio clips"
+    },
+    "effects": {
+      "video": "Video Effects",
+      "audio": "Audio Effects",
+      "fadeIn": "Fade In",
+      "fadeOut": "Fade Out",
+      "blur": "Blur",
+      "grayscale": "Grayscale",
+      "volume": "Volume",
+      "fadeAudio": "Audio Fade"
+    },
+    "properties": {
+      "selectClip": "Select a clip to view properties",
+      "basic": "Basic Info",
+      "position": "Position",
+      "video": "Video Settings",
+      "name": "Name",
+      "duration": "Duration",
+      "start": "Start Time",
+      "end": "End Time",
+      "volume": "Volume",
+      "speed": "Speed"
+    },
+    "preview": {
+      "title": "Preview"
+    },
+    "tabs": {
+      "video": "Video",
+      "export": "Export"
+    },
+    "video": {
+      "volume": "Volume"
     },
     "cut": {
       "startTime": "Start Time",
@@ -748,16 +810,39 @@
       "resolution": "Resolution"
     },
     "empty": {
-      "title": "Drag video file here",
-      "subtitle": "Or click upload button on the left"
+      "title": "Drag video here",
+      "subtitle": "Or import from left panel"
     },
     "timeline": {
-      "hint1": "Click timeline to seek",
-      "hint2": "Green=Start Red=End"
+      "hint1": "Click timeline to seek, drag to adjust cut points",
+      "hint2": "Green=Start Red=End",
+      "videoTrack1": "Video 1",
+      "videoTrack2": "Video 2",
+      "audioTrack1": "Audio 1",
+      "audioTrack2": "Audio 2"
     },
     "processing": {
       "title": "Processing Video...",
       "subtitle": "Please wait, processing with FFmpeg"
+    },
+    "shortcuts": {
+      "title": "Keyboard Shortcuts",
+      "playPause": "Play/Pause",
+      "split": "Split Clip",
+      "razor": "Razor Tool",
+      "select": "Select Tool",
+      "hand": "Hand Tool",
+      "delete": "Delete Selected",
+      "undo": "Undo",
+      "redo": "Redo",
+      "cut": "Cut",
+      "copy": "Copy",
+      "paste": "Paste",
+      "zoom": "Zoom Timeline",
+      "frameStep": "Frame Step",
+      "markInOut": "Mark In/Out",
+      "goToInOut": "Go to In/Out",
+      "goToStartEnd": "Go to Start/End"
     },
     "toast": {
       "message": "Notification",
@@ -768,7 +853,12 @@
       "audioAdded": "Audio added",
       "noVideo": "Please upload a video first",
       "exportSuccess": "Export successful",
-      "exportError": "Export failed"
+      "exportError": "Export failed",
+      "selectClip": "Please select a clip first",
+      "mainClipDelete": "Cannot delete main video clip",
+      "clipDeleted": "Clip deleted",
+      "clipSplit": "Clip split",
+      "outOfRange": "Playhead must be within clip range"
     }
   }
 }

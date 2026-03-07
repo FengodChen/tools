@@ -1,0 +1,10 @@
+# Ignore everything by default
+*
+
+# Keep the essential browser files
+!video_editor_core.js
+!video_editor_core_bg.wasm
+!video_editor_core.d.ts
+!video_editor_core_bg.wasm.d.ts
+!package.json
+!.gitignore

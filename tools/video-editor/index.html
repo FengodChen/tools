@@ -5,285 +5,646 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title data-i18n="videoEditor.title">🎬 在线视频编辑器</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- FFmpeg WASM 0.12.x - 使用本地文件避免 CORS 问题 -->
+    <!-- FFmpeg WASM -->
     <script src="./ffmpeg/ffmpeg.js"></script>
     <script src="./ffmpeg/util.js"></script>
     <script src="../../js/i18n.js"></script>
     <link rel="stylesheet" href="style.css">
 </head>
-<body class="bg-slate-50 text-slate-700">
-    <!-- Language Switcher -->
-    <div class="language-switcher-container"></div>
-
+<body class="kdenlive-editor">
     <!-- Loading Overlay -->
-    <div id="loadingOverlay" class="fixed inset-0 bg-slate-900/90 z-50 flex items-center justify-center">
-        <div class="text-center text-white">
-            <div class="w-16 h-16 border-4 border-white/30 border-t-indigo-500 rounded-full animate-spin mx-auto mb-4"></div>
-            <h2 class="text-xl font-semibold mb-2" data-i18n="videoEditor.loading.title">正在初始化编辑器...</h2>
-            <p class="text-slate-300" data-i18n="videoEditor.loading.subtitle">首次加载可能需要一些时间</p>
-            <div class="mt-4 text-sm text-slate-400" id="loadingProgress">0%</div>
+    <div id="loadingOverlay" class="loading-overlay">
+        <div class="loading-content">
+            <div class="loading-spinner"></div>
+            <h2 data-i18n="videoEditor.loading.title">正在初始化编辑器...</h2>
+            <p data-i18n="videoEditor.loading.subtitle">首次加载可能需要一些时间</p>
+            <div class="loading-progress" id="loadingProgress">0%</div>
         </div>
     </div>
 
-    <!-- Main Container -->
-    <div class="min-h-screen flex flex-col">
-        <!-- Header -->
-        <header class="bg-white border-b border-slate-200 px-4 py-3 flex items-center justify-between sticky top-0 z-40">
-            <div class="flex items-center gap-4">
-                <a href="../../index.html" class="inline-flex items-center gap-2 text-slate-500 hover:text-slate-800 transition-colors">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
-                    </svg>
-                    <span data-i18n="back">返回首页</span>
+    <!-- Main Application -->
+    <div class="app-container" id="appContainer">
+        <!-- Top Menu Bar -->
+        <nav class="menu-bar">
+            <div class="menu-left">
+                <a href="../../index.html" class="logo">
+                    <span class="logo-icon">🎬</span>
+                    <span class="logo-text" data-i18n="videoEditor.title">视频编辑器</span>
                 </a>
-                <div class="h-6 w-px bg-slate-200"></div>
-                <h1 class="text-xl font-bold text-slate-800" data-i18n="videoEditor.title">🎬 在线视频编辑器</h1>
-            </div>
-            <div class="flex items-center gap-3">
-                <button id="exportBtn" class="btn-primary px-4 py-2 rounded-lg font-medium flex items-center gap-2 opacity-50 cursor-not-allowed" disabled>
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
-                    </svg>
-                    <span data-i18n="videoEditor.buttons.export">导出视频</span>
-                </button>
-            </div>
-        </header>
-
-        <!-- Workspace -->
-        <div class="flex-1 flex overflow-hidden">
-            <!-- Left Sidebar - Tools -->
-            <aside class="w-64 bg-white border-r border-slate-200 flex flex-col">
-                <!-- Upload Section -->
-                <div class="p-4 border-b border-slate-200">
-                    <input type="file" id="videoInput" accept="video/*" class="hidden">
-                    <button id="uploadBtn" class="w-full btn-secondary py-3 rounded-lg font-medium flex items-center justify-center gap-2">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
-                        </svg>
-                        <span data-i18n="videoEditor.buttons.upload">上传视频</span>
-                    </button>
-                    <p class="text-xs text-slate-400 mt-2 text-center" data-i18n="videoEditor.upload.hint">支持 MP4, MOV, AVI, WebM 等格式</p>
-                </div>
-
-                <!-- Tools Tabs -->
-                <div class="flex border-b border-slate-200">
-                    <button class="tool-tab flex-1 py-3 text-sm font-medium text-indigo-600 border-b-2 border-indigo-600 active" data-tab="cut">
-                        <span data-i18n="videoEditor.tabs.cut">剪辑</span>
-                    </button>
-                    <button class="tool-tab flex-1 py-3 text-sm font-medium text-slate-500 hover:text-slate-700" data-tab="convert">
-                        <span data-i18n="videoEditor.tabs.convert">转换</span>
-                    </button>
-                    <button class="tool-tab flex-1 py-3 text-sm font-medium text-slate-500 hover:text-slate-700" data-tab="audio">
-                        <span data-i18n="videoEditor.tabs.audio">音频</span>
-                    </button>
-                </div>
-
-                <!-- Tool Panels -->
-                <div class="flex-1 overflow-y-auto p-4">
-                    <!-- Cut Panel -->
-                    <div id="cutPanel" class="tool-panel space-y-4">
-                        <div>
-                            <label class="block text-sm font-medium text-slate-700 mb-2" data-i18n="videoEditor.cut.startTime">开始时间</label>
-                            <div class="flex items-center gap-2">
-                                <input type="text" id="startTime" value="00:00:00" class="time-input flex-1 px-3 py-2 border border-slate-300 rounded-lg text-sm font-mono">
-                                <button id="setStartBtn" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 rounded-lg text-sm font-medium transition-colors" data-i18n="videoEditor.buttons.setCurrent">
-                                    设为当前
-                                </button>
-                            </div>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-slate-700 mb-2" data-i18n="videoEditor.cut.endTime">结束时间</label>
-                            <div class="flex items-center gap-2">
-                                <input type="text" id="endTime" value="00:00:00" class="time-input flex-1 px-3 py-2 border border-slate-300 rounded-lg text-sm font-mono">
-                                <button id="setEndBtn" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 rounded-lg text-sm font-medium transition-colors" data-i18n="videoEditor.buttons.setCurrent">
-                                    设为当前
-                                </button>
-                            </div>
-                        </div>
-                        <div class="flex gap-2">
-                            <button id="previewCutBtn" class="flex-1 btn-secondary py-2 rounded-lg text-sm font-medium" data-i18n="videoEditor.buttons.preview">
-                                预览
-                            </button>
-                            <button id="applyCutBtn" class="flex-1 btn-primary py-2 rounded-lg text-sm font-medium text-white" data-i18n="videoEditor.buttons.apply">
-                                应用
-                            </button>
-                        </div>
-                        <div class="pt-4 border-t border-slate-200">
-                            <h4 class="text-sm font-medium text-slate-700 mb-2" data-i18n="videoEditor.cut.segments">已添加的片段</h4>
-                            <div id="segmentsList" class="space-y-2 max-h-40 overflow-y-auto">
-                                <p class="text-sm text-slate-400 italic" data-i18n="videoEditor.cut.noSegments">暂无片段</p>
-                            </div>
-                            <button id="clearSegmentsBtn" class="w-full mt-2 py-2 text-sm text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors hidden" data-i18n="videoEditor.buttons.clearAll">
-                                清空所有
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Convert Panel -->
-                    <div id="convertPanel" class="tool-panel space-y-4 hidden">
-                        <div>
-                            <label class="block text-sm font-medium text-slate-700 mb-2" data-i18n="videoEditor.convert.format">输出格式</label>
-                            <select id="outputFormat" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm">
-                                <option value="mp4">MP4 (H.264)</option>
-                                <option value="webm">WebM (VP9)</option>
-                                <option value="mov">MOV (QuickTime)</option>
-                                <option value="avi">AVI</option>
-                                <option value="gif">GIF 动画</option>
-                                <option value="mp3">MP3 音频</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-slate-700 mb-2" data-i18n="videoEditor.convert.quality">视频质量</label>
-                            <select id="videoQuality" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm">
-                                <option value="high" data-i18n="videoEditor.quality.high">高质量 (原画)</option>
-                                <option value="medium" data-i18n="videoEditor.quality.medium">中等质量</option>
-                                <option value="low" data-i18n="videoEditor.quality.low">低质量 (压缩)</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-slate-700 mb-2" data-i18n="videoEditor.convert.resolution">分辨率</label>
-                            <select id="outputResolution" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm">
-                                <option value="original" data-i18n="videoEditor.resolution.original">原始分辨率</option>
-                                <option value="1920x1080">1080p (FHD)</option>
-                                <option value="1280x720">720p (HD)</option>
-                                <option value="854x480">480p</option>
-                                <option value="640x360">360p</option>
-                            </select>
-                        </div>
-                        <div id="gifOptions" class="hidden space-y-3 pt-3 border-t border-slate-200">
-                            <label class="block text-sm font-medium text-slate-700" data-i18n="videoEditor.convert.gifOptions">GIF 选项</label>
-                            <div>
-                                <span class="text-xs text-slate-500" data-i18n="videoEditor.convert.fps">帧率</span>
-                                <input type="range" id="gifFps" min="5" max="30" value="15" class="w-full mt-1">
-                                <div class="flex justify-between text-xs text-slate-400">
-                                    <span>5fps</span>
-                                    <span id="gifFpsValue">15fps</span>
-                                    <span>30fps</span>
-                                </div>
-                            </div>
-                            <div>
-                                <span class="text-xs text-slate-500" data-i18n="videoEditor.convert.width">宽度 (px)</span>
-                                <input type="number" id="gifWidth" value="480" class="w-full mt-1 px-3 py-2 border border-slate-300 rounded-lg text-sm">
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Audio Panel -->
-                    <div id="audioPanel" class="tool-panel space-y-4 hidden">
-                        <div>
-                            <label class="block text-sm font-medium text-slate-700 mb-2" data-i18n="videoEditor.audio.volume">音量调整</label>
-                            <div class="flex items-center gap-3">
-                                <svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"></path>
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2"></path>
-                                </svg>
-                                <input type="range" id="volumeSlider" min="0" max="200" value="100" class="flex-1">
-                                <span id="volumeValue" class="text-sm font-mono w-12 text-right">100%</span>
-                            </div>
-                        </div>
-                        <div class="flex items-center gap-3">
-                            <input type="checkbox" id="muteAudio" class="w-4 h-4 text-indigo-600 rounded">
-                            <label for="muteAudio" class="text-sm text-slate-700" data-i18n="videoEditor.audio.mute">静音原视频</label>
-                        </div>
-                        <div class="pt-4 border-t border-slate-200">
-                            <label class="block text-sm font-medium text-slate-700 mb-2" data-i18n="videoEditor.audio.addTrack">添加音轨</label>
-                            <input type="file" id="audioInput" accept="audio/*" class="hidden">
-                            <button id="addAudioBtn" class="w-full py-2 border-2 border-dashed border-slate-300 rounded-lg text-sm text-slate-500 hover:border-indigo-500 hover:text-indigo-600 transition-colors flex items-center justify-center gap-2">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-                                </svg>
-                                <span data-i18n="videoEditor.buttons.addAudio">添加音频文件</span>
-                            </button>
-                            <div id="addedTracks" class="mt-3 space-y-2"></div>
-                        </div>
-                        <div id="audioTrackControls" class="hidden space-y-3 pt-3">
-                            <div>
-                                <label class="block text-xs text-slate-500 mb-1" data-i18n="videoEditor.audio.trackOffset">音轨偏移 (秒)</label>
-                                <input type="number" id="audioOffset" value="0" step="0.1" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm">
-                            </div>
-                            <div>
-                                <label class="block text-xs text-slate-500 mb-1" data-i18n="videoEditor.audio.trackVolume">音轨音量</label>
-                                <input type="range" id="trackVolume" min="0" max="200" value="100" class="w-full">
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Video Info -->
-                <div class="p-4 border-t border-slate-200 bg-slate-50">
-                    <h4 class="text-xs font-semibold text-slate-500 uppercase mb-2" data-i18n="videoEditor.info.title">视频信息</h4>
-                    <div id="videoInfo" class="space-y-1 text-xs text-slate-600">
-                        <p class="italic text-slate-400" data-i18n="videoEditor.info.noVideo">未加载视频</p>
-                    </div>
-                </div>
-            </aside>
-
-            <!-- Main Preview Area -->
-            <main class="flex-1 flex flex-col bg-slate-900">
-                <!-- Video Container -->
-                <div class="flex-1 flex items-center justify-center p-8 relative">
-                    <div id="emptyState" class="text-center text-slate-400">
-                        <svg class="w-20 h-20 mx-auto mb-4 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
-                        </svg>
-                        <p class="text-lg mb-2" data-i18n="videoEditor.empty.title">拖放视频文件到此处</p>
-                        <p class="text-sm opacity-70" data-i18n="videoEditor.empty.subtitle">或点击左侧上传按钮</p>
-                    </div>
-                    <video id="previewVideo" class="max-w-full max-h-full hidden" controls></video>
-                    <canvas id="thumbnailCanvas" class="hidden"></canvas>
-                </div>
-
-                <!-- Timeline -->
-                <div id="timelineContainer" class="bg-slate-800 border-t border-slate-700 p-4 hidden">
-                    <div class="flex items-center gap-4 mb-3">
-                        <button id="playPauseBtn" class="w-10 h-10 rounded-full bg-indigo-600 hover:bg-indigo-700 flex items-center justify-center text-white transition-colors">
-                            <svg id="playIcon" class="w-5 h-5 ml-0.5" fill="currentColor" viewBox="0 0 24 24">
-                                <path d="M8 5v14l11-7z"/>
-                            </svg>
-                            <svg id="pauseIcon" class="w-5 h-5 hidden" fill="currentColor" viewBox="0 0 24 24">
-                                <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>
+                <div class="menu-items">
+                    <div class="menu-group">
+                        <button class="menu-btn" data-menu="file">
+                            <span data-i18n="videoEditor.menu.file">文件</span>
+                            <svg class="menu-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
                             </svg>
                         </button>
-                        <div class="text-white font-mono text-sm" id="currentTimeDisplay">00:00:00</div>
-                        <div class="flex-1 relative h-12 bg-slate-700 rounded-lg overflow-hidden cursor-pointer" id="timeline">
-                            <div id="timelineProgress" class="absolute left-0 top-0 h-full bg-indigo-600/30 w-0"></div>
-                            <div id="timelinePlayhead" class="absolute left-0 top-0 h-full w-0.5 bg-indigo-500 z-10"></div>
-                            <div id="timelineStartMarker" class="absolute left-0 top-0 h-full w-1 bg-green-500 z-20 cursor-ew-resize hidden"></div>
-                            <div id="timelineEndMarker" class="absolute left-0 top-0 h-full w-1 bg-red-500 z-20 cursor-ew-resize hidden"></div>
-                            <div id="timelineThumbnails" class="absolute inset-0 flex"></div>
+                        <div class="dropdown-menu" id="fileMenu">
+                            <button class="dropdown-item" data-action="newProject">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                                <span data-i18n="videoEditor.menu.newProject">新建项目</span>
+                                <kbd>Ctrl+N</kbd>
+                            </button>
+                            <button class="dropdown-item" data-action="openVideo">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/></svg>
+                                <span data-i18n="videoEditor.menu.openVideo">打开视频</span>
+                                <kbd>Ctrl+O</kbd>
+                            </button>
+                            <div class="dropdown-divider"></div>
+                            <button class="dropdown-item" data-action="saveProject">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"/></svg>
+                                <span data-i18n="videoEditor.menu.saveProject">保存项目</span>
+                                <kbd>Ctrl+S</kbd>
+                            </button>
+                            <div class="dropdown-divider"></div>
+                            <button class="dropdown-item" data-action="exportVideo">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                                <span data-i18n="videoEditor.menu.exportVideo">导出视频</span>
+                                <kbd>Ctrl+E</kbd>
+                            </button>
                         </div>
-                        <div class="text-white font-mono text-sm" id="durationDisplay">00:00:00</div>
                     </div>
-                    <div class="flex justify-between text-xs text-slate-400">
-                        <span data-i18n="videoEditor.timeline.hint1">点击时间轴跳转</span>
-                        <span data-i18n="videoEditor.timeline.hint2">绿色=开始点 红色=结束点</span>
+                    <div class="menu-group">
+                        <button class="menu-btn" data-menu="edit">
+                            <span data-i18n="videoEditor.menu.edit">编辑</span>
+                            <svg class="menu-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                            </svg>
+                        </button>
+                        <div class="dropdown-menu" id="editMenu">
+                            <button class="dropdown-item" data-action="undo">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/></svg>
+                                <span data-i18n="videoEditor.menu.undo">撤销</span>
+                                <kbd>Ctrl+Z</kbd>
+                            </button>
+                            <button class="dropdown-item" data-action="redo">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 10h-10a8 8 0 00-8 8v2M21 10l-6 6m6-6l-6-6"/></svg>
+                                <span data-i18n="videoEditor.menu.redo">重做</span>
+                                <kbd>Ctrl+Y</kbd>
+                            </button>
+                            <div class="dropdown-divider"></div>
+                            <button class="dropdown-item" data-action="cut">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.121 14.121L19 19m-7-7l7-7m-7 7l-2.879 2.879M12 12L9.121 9.121m0 5.758a3 3 0 10-4.243 4.243 3 3 0 004.243-4.243zm0-5.758a3 3 0 10-4.243-4.243 3 3 0 004.243 4.243z"/></svg>
+                                <span data-i18n="videoEditor.menu.cut">剪切</span>
+                                <kbd>Ctrl+X</kbd>
+                            </button>
+                            <button class="dropdown-item" data-action="copy">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+                                <span data-i18n="videoEditor.menu.copy">复制</span>
+                                <kbd>Ctrl+C</kbd>
+                            </button>
+                            <button class="dropdown-item" data-action="paste">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+                                <span data-i18n="videoEditor.menu.paste">粘贴</span>
+                                <kbd>Ctrl+V</kbd>
+                            </button>
+                            <button class="dropdown-item" data-action="delete">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                                <span data-i18n="videoEditor.menu.delete">删除</span>
+                                <kbd>Del</kbd>
+                            </button>
+                            <div class="dropdown-divider"></div>
+                            <button class="dropdown-item" data-action="split">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>
+                                <span data-i18n="videoEditor.menu.split">分割片段</span>
+                                <kbd>S</kbd>
+                            </button>
+                            <button class="dropdown-item" data-action="selectAll">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7"/></svg>
+                                <span data-i18n="videoEditor.menu.selectAll">全选</span>
+                                <kbd>Ctrl+A</kbd>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="menu-group">
+                        <button class="menu-btn" data-menu="view">
+                            <span data-i18n="videoEditor.menu.view">视图</span>
+                            <svg class="menu-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                            </svg>
+                        </button>
+                        <div class="dropdown-menu" id="viewMenu">
+                            <button class="dropdown-item" data-action="zoomIn">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                                <span data-i18n="videoEditor.menu.zoomIn">放大时间轴</span>
+                                <kbd>+</kbd>
+                            </button>
+                            <button class="dropdown-item" data-action="zoomOut">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"/></svg>
+                                <span data-i18n="videoEditor.menu.zoomOut">缩小时间轴</span>
+                                <kbd>-</kbd>
+                            </button>
+                            <button class="dropdown-item" data-action="fitTimeline">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"/></svg>
+                                <span data-i18n="videoEditor.menu.fitTimeline">适应窗口</span>
+                                <kbd>F</kbd>
+                            </button>
+                            <div class="dropdown-divider"></div>
+                            <button class="dropdown-item" data-action="fullscreen">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"/></svg>
+                                <span data-i18n="videoEditor.menu.fullscreen">全屏</span>
+                                <kbd>F11</kbd>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="menu-group">
+                        <button class="menu-btn" data-menu="help">
+                            <span data-i18n="videoEditor.menu.help">帮助</span>
+                            <svg class="menu-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                            </svg>
+                        </button>
+                        <div class="dropdown-menu" id="helpMenu">
+                            <button class="dropdown-item" data-action="shortcuts">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/></svg>
+                                <span data-i18n="videoEditor.menu.shortcuts">快捷键</span>
+                                <kbd>?</kbd>
+                            </button>
+                        </div>
                     </div>
                 </div>
-            </main>
+            </div>
+            <div class="menu-right">
+                <div id="langSwitcherContainer"></div>
+                <button class="toolbar-btn primary" id="exportBtn" disabled>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                    <span data-i18n="videoEditor.buttons.export">导出</span>
+                </button>
+            </div>
+        </nav>
+
+        <!-- Main Workspace -->
+        <div class="workspace">
+            <!-- Left Panel - Project & Effects -->
+            <aside class="left-panel" id="leftPanel">
+                <div class="panel-tabs">
+                    <button class="panel-tab active" data-panel="project">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/></svg>
+                        <span data-i18n="videoEditor.panels.project">项目</span>
+                    </button>
+                    <button class="panel-tab" data-panel="effects">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                        <span data-i18n="videoEditor.panels.effects">效果</span>
+                    </button>
+                    <button class="panel-tab" data-panel="properties">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/></svg>
+                        <span data-i18n="videoEditor.panels.properties">属性</span>
+                    </button>
+                </div>
+                
+                <!-- Project Panel -->
+                <div class="panel-content active" id="projectPanel">
+                    <div class="panel-section">
+                        <div class="section-header">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 4v16M17 4v16M3 8h4m10 0h4M3 12h18M3 16h4m10 0h4M4 20h16a1 1 0 001-1V5a1 1 0 00-1-1H4a1 1 0 00-1 1v14a1 1 0 001 1z"/></svg>
+                            <span data-i18n="videoEditor.project.videoClips">视频素材</span>
+                        </div>
+                        <div class="clip-list" id="videoClipList">
+                            <div class="empty-clips" data-i18n="videoEditor.project.noClips">暂无素材</div>
+                        </div>
+                        <input type="file" id="videoInput" accept="video/*" class="hidden">
+                        <button class="add-clip-btn" id="addVideoBtn">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                            <span data-i18n="videoEditor.buttons.addVideo">添加视频</span>
+                        </button>
+                    </div>
+                    <div class="panel-section">
+                        <div class="section-header">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"/></svg>
+                            <span data-i18n="videoEditor.project.audioClips">音频素材</span>
+                        </div>
+                        <div class="clip-list" id="audioClipList">
+                            <div class="empty-clips" data-i18n="videoEditor.project.noAudioClips">暂无音频</div>
+                        </div>
+                        <input type="file" id="audioInput" accept="audio/*" class="hidden">
+                        <button class="add-clip-btn" id="addAudioBtn">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                            <span data-i18n="videoEditor.buttons.addAudio">添加音频</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Effects Panel -->
+                <div class="panel-content" id="effectsPanel">
+                    <div class="effects-categories">
+                        <div class="effect-category">
+                            <div class="category-header">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                                <span data-i18n="videoEditor.effects.video">视频效果</span>
+                            </div>
+                            <div class="effect-items">
+                                <div class="effect-item" data-effect="fadeIn" draggable="true">
+                                    <span class="effect-icon">✨</span>
+                                    <span class="effect-name" data-i18n="videoEditor.effects.fadeIn">淡入</span>
+                                </div>
+                                <div class="effect-item" data-effect="fadeOut" draggable="true">
+                                    <span class="effect-icon">🌙</span>
+                                    <span class="effect-name" data-i18n="videoEditor.effects.fadeOut">淡出</span>
+                                </div>
+                                <div class="effect-item" data-effect="blur" draggable="true">
+                                    <span class="effect-icon">🌫️</span>
+                                    <span class="effect-name" data-i18n="videoEditor.effects.blur">模糊</span>
+                                </div>
+                                <div class="effect-item" data-effect="grayscale" draggable="true">
+                                    <span class="effect-icon">⚫</span>
+                                    <span class="effect-name" data-i18n="videoEditor.effects.grayscale">黑白</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="effect-category">
+                            <div class="category-header">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"/></svg>
+                                <span data-i18n="videoEditor.effects.audio">音频效果</span>
+                            </div>
+                            <div class="effect-items">
+                                <div class="effect-item" data-effect="volume" draggable="true">
+                                    <span class="effect-icon">🔊</span>
+                                    <span class="effect-name" data-i18n="videoEditor.effects.volume">音量调节</span>
+                                </div>
+                                <div class="effect-item" data-effect="fadeAudio" draggable="true">
+                                    <span class="effect-icon">📉</span>
+                                    <span class="effect-name" data-i18n="videoEditor.effects.fadeAudio">音频淡入淡出</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Properties Panel -->
+                <div class="panel-content" id="propertiesPanel">
+                    <div class="properties-empty" data-i18n="videoEditor.properties.selectClip">请选择片段查看属性</div>
+                    <div class="properties-content hidden" id="clipProperties">
+                        <div class="property-group">
+                            <h4 data-i18n="videoEditor.properties.basic">基本信息</h4>
+                            <div class="property-row">
+                                <label data-i18n="videoEditor.properties.name">名称</label>
+                                <input type="text" id="propName" class="property-input">
+                            </div>
+                            <div class="property-row">
+                                <label data-i18n="videoEditor.properties.duration">时长</label>
+                                <span id="propDuration" class="property-value">00:00:00</span>
+                            </div>
+                        </div>
+                        <div class="property-group">
+                            <h4 data-i18n="videoEditor.properties.position">位置</h4>
+                            <div class="property-row">
+                                <label data-i18n="videoEditor.properties.start">开始时间</label>
+                                <input type="number" id="propStart" class="property-input" step="0.1">
+                            </div>
+                            <div class="property-row">
+                                <label data-i18n="videoEditor.properties.end">结束时间</label>
+                                <input type="number" id="propEnd" class="property-input" step="0.1">
+                            </div>
+                        </div>
+                        <div class="property-group" id="videoProperties">
+                            <h4 data-i18n="videoEditor.properties.video">视频设置</h4>
+                            <div class="property-row">
+                                <label data-i18n="videoEditor.properties.volume">音量</label>
+                                <input type="range" id="propVolume" min="0" max="200" value="100" class="property-slider">
+                                <span id="propVolumeValue">100%</span>
+                            </div>
+                            <div class="property-row">
+                                <label data-i18n="videoEditor.properties.speed">播放速度</label>
+                                <select id="propSpeed" class="property-select">
+                                    <option value="0.25">0.25x</option>
+                                    <option value="0.5">0.5x</option>
+                                    <option value="0.75">0.75x</option>
+                                    <option value="1" selected>1x</option>
+                                    <option value="1.25">1.25x</option>
+                                    <option value="1.5">1.5x</option>
+                                    <option value="2">2x</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Panel Resize Handle -->
+                <div class="panel-resize-handle" id="leftPanelHandle"></div>
+            </aside>
+
+            <!-- Center Area - Preview -->
+            <div class="center-area">
+                <!-- Preview Monitor -->
+                <div class="preview-monitor" id="previewMonitor">
+                    <div class="preview-header">
+                        <span class="preview-label" data-i18n="videoEditor.preview.title">预览</span>
+                        <div class="preview-controls">
+                            <button class="preview-btn" id="previewFit" title="适应">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"/></svg>
+                            </button>
+                            <button class="preview-btn" id="preview100" title="100%">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7"/></svg>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="preview-canvas" id="previewCanvasContainer">
+                        <div class="empty-state" id="emptyState">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                            </svg>
+                            <p data-i18n="videoEditor.empty.title">拖放视频到此处</p>
+                            <p class="subtitle" data-i18n="videoEditor.empty.subtitle">或从左侧导入</p>
+                        </div>
+                        <canvas id="previewCanvas" class="hidden"></canvas>
+                        <div id="videoElementsContainer" class="hidden"></div>
+                    </div>
+                    <!-- Transport Controls -->
+                    <div class="transport-controls">
+                        <div class="transport-left">
+                            <button class="transport-btn" id="prevFrameBtn" title="上一帧">
+                                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg>
+                            </button>
+                            <button class="transport-btn play-btn" id="playPauseBtn">
+                                <svg id="playIcon" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+                                <svg id="pauseIcon" class="hidden" viewBox="0 0 24 24" fill="currentColor"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+                            </button>
+                            <button class="transport-btn" id="nextFrameBtn" title="下一帧">
+                                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/></svg>
+                            </button>
+                            <button class="transport-btn" id="loopBtn" title="循环播放">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                                </svg>
+                            </button>
+                        </div>
+                        <div class="transport-center">
+                            <span class="timecode" id="currentTimeDisplay">00:00:00:00</span>
+                            <span class="timecode-separator">/</span>
+                            <span class="timecode" id="durationDisplay">00:00:00:00</span>
+                        </div>
+                        <div class="transport-right">
+                            <button class="transport-btn" id="markInBtn" title="标记入点">
+                                <span class="mark-label">[</span>
+                            </button>
+                            <button class="transport-btn" id="markOutBtn" title="标记出点">
+                                <span class="mark-label">]</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Timeline Area -->
+                <div class="timeline-area" id="timelineArea">
+                    <!-- Timeline Toolbar -->
+                    <div class="timeline-toolbar">
+                        <div class="toolbar-group">
+                            <button class="tool-btn active" id="selectTool" title="选择工具 (V)">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122"/></svg>
+                            </button>
+                            <button class="tool-btn" id="razorTool" title="切割工具 (C)">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.121 14.121L19 19m-7-7l7-7m-7 7l-2.879 2.879M12 12L9.121 9.121m0 5.758a3 3 0 10-4.243 4.243 3 3 0 004.243-4.243zm0-5.758a3 3 0 10-4.243-4.243 3 3 0 004.243 4.243z"/></svg>
+                            </button>
+                            <button class="tool-btn" id="handTool" title="手型工具 (H)">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 11.5V14m0-2.5v-6a1.5 1.5 0 113 0m-3 6a1.5 1.5 0 00-3 0v2a7.5 7.5 0 0015 0v-5a1.5 1.5 0 00-3 0m-6-3V11m0-5.5v-1a1.5 1.5 0 013 0v1m0 0V11"/></svg>
+                            </button>
+                        </div>
+                        <div class="toolbar-divider"></div>
+                        <div class="toolbar-group">
+                            <button class="tool-btn" id="undoBtn" title="撤销 (Ctrl+Z)">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/></svg>
+                            </button>
+                            <button class="tool-btn" id="redoBtn" title="重做 (Ctrl+Y)">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 10h-10a8 8 0 00-8 8v2M21 10l-6 6m6-6l-6-6"/></svg>
+                            </button>
+                        </div>
+                        <div class="toolbar-divider"></div>
+                        <div class="toolbar-group zoom-controls">
+                            <button class="tool-btn" id="zoomOutBtn" title="缩小 (-)">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"/></svg>
+                            </button>
+                            <div class="zoom-slider-container">
+                                <input type="range" id="zoomSlider" min="10" max="200" value="50" class="zoom-slider">
+                            </div>
+                            <button class="tool-btn" id="zoomInBtn" title="放大 (+)">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                            </button>
+                        </div>
+                        <div class="toolbar-divider"></div>
+                        <div class="toolbar-group">
+                            <button class="tool-btn" id="snapBtn" title="吸附对齐">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+                            </button>
+                            <button class="tool-btn" id="showMarkersBtn" title="显示标记">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Timeline Tracks -->
+                    <div class="timeline-container" id="timelineContainer">
+                        <!-- Track Headers -->
+                        <div class="track-headers" id="trackHeaders">
+                            <div class="timeline-ruler-header">
+                                <button class="add-track-btn" id="addTrackBtn" title="添加轨道">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                                </button>
+                            </div>
+                            <div class="track-header" data-track="video1">
+                                <div class="track-controls">
+                                    <button class="track-eye" title="显示/隐藏">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                                    </button>
+                                    <button class="track-lock" title="锁定">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z"/></svg>
+                                    </button>
+                                </div>
+                                <span class="track-name">V1</span>
+                                <span class="track-type-icon">🎬</span>
+                            </div>
+                            <div class="track-header" data-track="video2">
+                                <div class="track-controls">
+                                    <button class="track-eye" title="显示/隐藏">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                                    </button>
+                                    <button class="track-lock" title="锁定">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z"/></svg>
+                                    </button>
+                                </div>
+                                <span class="track-name">V2</span>
+                                <span class="track-type-icon">🎬</span>
+                            </div>
+                            <div class="track-header" data-track="audio1">
+                                <div class="track-controls">
+                                    <button class="track-mute" title="静音">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"/></svg>
+                                    </button>
+                                    <button class="track-lock" title="锁定">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z"/></svg>
+                                    </button>
+                                </div>
+                                <span class="track-name">A1</span>
+                                <span class="track-type-icon">🔊</span>
+                            </div>
+                            <div class="track-header" data-track="audio2">
+                                <div class="track-controls">
+                                    <button class="track-mute" title="静音">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"/></svg>
+                                    </button>
+                                    <button class="track-lock" title="锁定">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z"/></svg>
+                                    </button>
+                                </div>
+                                <span class="track-name">A2</span>
+                                <span class="track-type-icon">🔊</span>
+                            </div>
+                        </div>
+
+                        <!-- Timeline Tracks Area -->
+                        <div class="timeline-tracks-wrapper" id="timelineTracksWrapper">
+                            <!-- Ruler -->
+                            <div class="timeline-ruler" id="timelineRuler">
+                                <div class="ruler-canvas" id="rulerCanvas"></div>
+                            </div>
+                            
+                            <!-- Tracks -->
+                            <div class="tracks-container" id="tracksContainer">
+                                <!-- Playhead -->
+                                <div class="playhead" id="playhead">
+                                    <div class="playhead-line"></div>
+                                    <div class="playhead-top"></div>
+                                </div>
+                                
+                                <!-- In/Out Points -->
+                                <div class="in-point-marker hidden" id="inPointMarker">
+                                    <div class="point-label">IN</div>
+                                </div>
+                                <div class="out-point-marker hidden" id="outPointMarker">
+                                    <div class="point-label">OUT</div>
+                                </div>
+
+                                <!-- Track Rows -->
+                                <div class="track-row video-row" data-track="video1" id="videoTrack1">
+                                    <div class="track-content"></div>
+                                </div>
+                                <div class="track-row video-row" data-track="video2" id="videoTrack2">
+                                    <div class="track-content"></div>
+                                </div>
+                                <div class="track-row audio-row" data-track="audio1" id="audioTrack1">
+                                    <div class="track-content"></div>
+                                </div>
+                                <div class="track-row audio-row" data-track="audio2" id="audioTrack2">
+                                    <div class="track-content"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Timeline Status Bar -->
+                    <div class="timeline-status">
+                        <span class="status-item" id="timelineInfo">就绪</span>
+                        <span class="status-item" id="selectionInfo"></span>
+                        <span class="status-item zoom-info" id="zoomInfo">缩放: 100%</span>
+                    </div>
+                </div>
+            </div>
         </div>
+    </div>
+
+    <!-- Context Menu -->
+    <div class="context-menu hidden" id="contextMenu">
+        <div class="context-menu-items" id="contextMenuItems"></div>
     </div>
 
     <!-- Processing Modal -->
-    <div id="processingModal" class="fixed inset-0 bg-slate-900/80 z-50 hidden flex items-center justify-center">
-        <div class="bg-white rounded-2xl p-8 max-w-md w-full mx-4">
-            <div class="text-center">
-                <div class="w-16 h-16 border-4 border-indigo-100 border-t-indigo-600 rounded-full animate-spin mx-auto mb-4"></div>
-                <h3 class="text-xl font-semibold text-slate-800 mb-2" data-i18n="videoEditor.processing.title">正在处理视频...</h3>
-                <p class="text-slate-500 mb-4" data-i18n="videoEditor.processing.subtitle">请稍候，正在使用 FFmpeg 处理</p>
-                <div class="w-full bg-slate-200 rounded-full h-2 mb-2">
-                    <div id="processingProgress" class="bg-indigo-600 h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
+    <div class="processing-modal hidden" id="processingModal">
+        <div class="processing-content">
+            <div class="processing-spinner"></div>
+            <h3 data-i18n="videoEditor.processing.title">正在处理...</h3>
+            <p data-i18n="videoEditor.processing.subtitle">请稍候</p>
+            <div class="progress-bar">
+                <div class="progress-fill" id="processingProgress"></div>
+            </div>
+            <p class="progress-text" id="processingStatus">0%</p>
+        </div>
+    </div>
+
+    <!-- Shortcuts Modal -->
+    <div class="modal hidden" id="shortcutsModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 data-i18n="videoEditor.shortcuts.title">键盘快捷键</h3>
+                <button class="modal-close" id="closeShortcutsModal">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="shortcuts-grid">
+                    <div class="shortcut-item">
+                        <kbd>Space</kbd>
+                        <span data-i18n="videoEditor.shortcuts.playPause">播放/暂停</span>
+                    </div>
+                    <div class="shortcut-item">
+                        <kbd>S</kbd>
+                        <span data-i18n="videoEditor.shortcuts.split">分割片段</span>
+                    </div>
+                    <div class="shortcut-item">
+                        <kbd>C</kbd>
+                        <span data-i18n="videoEditor.shortcuts.razor">切割工具</span>
+                    </div>
+                    <div class="shortcut-item">
+                        <kbd>V</kbd>
+                        <span data-i18n="videoEditor.shortcuts.select">选择工具</span>
+                    </div>
+                    <div class="shortcut-item">
+                        <kbd>H</kbd>
+                        <span data-i18n="videoEditor.shortcuts.hand">手型工具</span>
+                    </div>
+                    <div class="shortcut-item">
+                        <kbd>Delete</kbd>
+                        <span data-i18n="videoEditor.shortcuts.delete">删除选中</span>
+                    </div>
+                    <div class="shortcut-item">
+                        <kbd>Ctrl + Z</kbd>
+                        <span data-i18n="videoEditor.shortcuts.undo">撤销</span>
+                    </div>
+                    <div class="shortcut-item">
+                        <kbd>Ctrl + Y</kbd>
+                        <span data-i18n="videoEditor.shortcuts.redo">重做</span>
+                    </div>
+                    <div class="shortcut-item">
+                        <kbd>Ctrl + X</kbd>
+                        <span data-i18n="videoEditor.shortcuts.cut">剪切</span>
+                    </div>
+                    <div class="shortcut-item">
+                        <kbd>Ctrl + C</kbd>
+                        <span data-i18n="videoEditor.shortcuts.copy">复制</span>
+                    </div>
+                    <div class="shortcut-item">
+                        <kbd>Ctrl + V</kbd>
+                        <span data-i18n="videoEditor.shortcuts.paste">粘贴</span>
+                    </div>
+                    <div class="shortcut-item">
+                        <kbd>+ / -</kbd>
+                        <span data-i18n="videoEditor.shortcuts.zoom">缩放时间轴</span>
+                    </div>
+                    <div class="shortcut-item">
+                        <kbd>← / →</kbd>
+                        <span data-i18n="videoEditor.shortcuts.frameStep">逐帧移动</span>
+                    </div>
+                    <div class="shortcut-item">
+                        <kbd>I / O</kbd>
+                        <span data-i18n="videoEditor.shortcuts.markInOut">标记入点/出点</span>
+                    </div>
+                    <div class="shortcut-item">
+                        <kbd>[ / ]</kbd>
+                        <span data-i18n="videoEditor.shortcuts.goToInOut">跳到入点/出点</span>
+                    </div>
+                    <div class="shortcut-item">
+                        <kbd>Home / End</kbd>
+                        <span data-i18n="videoEditor.shortcuts.goToStartEnd">跳到开头/结尾</span>
+                    </div>
                 </div>
-                <p id="processingStatus" class="text-sm text-slate-400">0%</p>
             </div>
         </div>
     </div>
 
-    <!-- Toast -->
-    <div id="toast" class="fixed top-4 right-4 bg-white border border-slate-200 text-slate-800 px-6 py-3 rounded-xl shadow-2xl transform translate-x-full transition-transform duration-300 z-[110] flex items-center gap-3 hidden">
-        <span id="toastIcon" class="text-xl">✅</span>
-        <span id="toastMessage" data-i18n="videoEditor.toast.message">提示信息</span>
+    <!-- Toast Notification -->
+    <div class="toast" id="toast">
+        <span class="toast-icon" id="toastIcon">✅</span>
+        <span class="toast-message" id="toastMessage"></span>
     </div>
 
-    <script src="app.js"></script>
+    <script type="module" src="app.js"></script>
 </body>
 </html>

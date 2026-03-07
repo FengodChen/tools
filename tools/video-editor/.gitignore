@@ -1,0 +1,23 @@
+# Rust build artifacts - 只保留浏览器加载的 WASM 输出，其他全部忽略
+wasm/target/
+*.rs.bk
+
+# 本地备份文件
+*.backup
+*.bak
+
+# IDE
+.idea/
+*.iml
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*

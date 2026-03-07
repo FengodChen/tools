@@ -1,0 +1,18 @@
+{
+  "name": "video-editor-core",
+  "collaborators": [
+    "Video Editor Team"
+  ],
+  "description": "Core video editing engine in Rust/WASM",
+  "version": "0.1.0",
+  "files": [
+    "video_editor_core_bg.wasm",
+    "video_editor_core.js",
+    "video_editor_core.d.ts"
+  ],
+  "module": "video_editor_core.js",
+  "types": "video_editor_core.d.ts",
+  "sideEffects": [
+    "./snippets/*"
+  ]
+}
